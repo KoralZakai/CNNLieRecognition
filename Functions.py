@@ -7,6 +7,7 @@ import pyaudio
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
@@ -59,19 +60,23 @@ class Functions:
         dlg.stopRecordBtn.hide()
         dlg.startRecordBtn.setEnabled(True)
         dlg.recordingLbl.hide()
-
         print("* done recording")
         self.stream.stop_stream()
         self.stream.close()
         self.pyrecorded.terminate()
         WAVE_OUTPUT_FILENAME = time.strftime("%Y%m%d-%H%M%S")
         WAVE_OUTPUT_FILENAME = WAVE_OUTPUT_FILENAME + ".wav"
+        path = os.path.dirname(os.path.realpath(__file__))
+        if not os.path.exists(path+"\\Records"):
+            os.mkdir("Records")
         wf = wave.open("Records\\"+WAVE_OUTPUT_FILENAME, 'wb')
         wf.setnchannels(self.CHANNELS)
         wf.setsampwidth(self.pyrecorded.get_sample_size(self.FORMAT))
         wf.setframerate(self.RATE)
         wf.writeframes(b''.join(self.frames))
         wf.close()
+        dlg.wavPathTxt.setText(WAVE_OUTPUT_FILENAME)
+        Functions.showWavPlot(self, dlg, os.path.dirname(os.path.realpath(__file__))+"\\Records\\"+WAVE_OUTPUT_FILENAME)
 
     def openFile(self, dlg):
         options = QFileDialog.Options()
@@ -82,19 +87,19 @@ class Functions:
         if len(word) != 0:
             if word.endswith('.wav'):
                 dlg.wavPathTxt.setText(word)
+                Functions.showWavPlot(self, dlg, fileName)
             else:
                 QMessageBox.about(dlg, "Error", "Wrong File Type , Please Use Only Wav Files")
-        Functions.showWavPlot(self, dlg, fileName)
 
     def showWavPlot(self, dlg , filepath):
         spf = wave.open(filepath, 'r')
         # Extract Raw Audio from Wav File
         signal = spf.readframes(-1)
         signal = np.fromstring(signal, 'Int16')
-        plt.figure(2)
-        plt.title('Signal Wave...')
+        plt.figure(1)
+        plt.title('Signal Wave')
         plt.plot(signal)
-        plt.show()
+
         #plt.ioff()
         plt.savefig('Wave.png')
 
