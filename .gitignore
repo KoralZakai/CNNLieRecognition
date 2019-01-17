@@ -5,7 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
-
+db/MFCC
+Records/
 # Distribution / packaging
 .Python
 build/
