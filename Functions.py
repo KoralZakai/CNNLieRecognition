@@ -1,11 +1,17 @@
 from PyQt5 import QtGui, QtWidgets, uic
-import pyaudio
 import time
 import wave
 import threading
 import sys
+import pyaudio
+from PyQt5.QtWidgets import QFileDialog, QMessageBox
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT as NavigationToolbar
 
-from PyQt5.QtWidgets import QFileDialog
+from matplotlib import figure
 
 
 class Functions:
@@ -70,7 +76,26 @@ class Functions:
     def openFile(self, dlg):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(None, "QFileDialog.getOpenFileName()", "","All Files (*);;Python Files (*.wav)", options=options)
-        if fileName:
-                dlg.wavPathTxt.hide()
+        fileName, _ = QFileDialog.getOpenFileName(None, "File Browser", "","Wav Files (*.wav)", options=options)
+        word = fileName.split('/')
+        word = word[len(word) - 1]
+        if len(word) != 0:
+            if word.endswith('.wav'):
+                dlg.wavPathTxt.setText(word)
+            else:
+                QMessageBox.about(dlg, "Error", "Wrong File Type , Please Use Only Wav Files")
+        Functions.showWavPlot(self, dlg, fileName)
+
+    def showWavPlot(self, dlg , filepath):
+        spf = wave.open(filepath, 'r')
+        # Extract Raw Audio from Wav File
+        signal = spf.readframes(-1)
+        signal = np.fromstring(signal, 'Int16')
+        plt.figure(2)
+        plt.title('Signal Wave...')
+        plt.plot(signal)
+        plt.show()
+        #plt.ioff()
+        plt.savefig('Wave.png')
+
 

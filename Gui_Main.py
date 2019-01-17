@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets, uic
 from Functions import Functions as Functions
-
+from  tryit import Window
 
 def main():
     func = Functions()
@@ -16,7 +16,6 @@ def main():
     dlg.stopRecordBtn.clicked.connect(lambda: func.stopRecord(dlg))
     dlg.show()
     app.exec()
-
 
 if __name__ == "__main__":
     main()
