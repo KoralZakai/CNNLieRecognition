@@ -39,7 +39,7 @@ class App(QWidget):
             arrTxt[i].setFixedWidth(150)
             arrTxt[i].setFixedHeight(25)
             arrTxt[i].setContentsMargins(20,200,200,200)
-            #arrTxt[i].setAlignment(Qt.AlignCenter)
+            arrTxt[i].setAlignment(Qt.AlignCenter)
             arrLbl.append(QtWidgets.QLabel(arrLblNames[i], self))
             arrLbl[i].setFixedWidth(100)
             form.addRow(arrLbl[i],arrTxt[i])
