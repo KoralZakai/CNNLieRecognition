@@ -1,8 +1,4 @@
 import sys
-from PyQt5.QtWidgets import QDialog, QApplication, QPushButton, QVBoxLayout
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5 import QtGui, QtWidgets, uic
 import time
@@ -14,13 +10,13 @@ from PyQt5.QtWidgets import QFileDialog, QMessageBox
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from PyQt5.QtCore import Qt
 
-import random
+class App(QWidget):
 
-class Window(QDialog):
-    def __init__(self, parent=None):
-        super(Window, self).__init__(parent)
-        # init the initial parameters of this GUI
+    #init the initial parameters of this GUI
+    def __init__(self):
+        super().__init__()
         self.title = 'Lie Detection'
         self.left = 100
         self.top = 100
@@ -36,31 +32,8 @@ class Window(QDialog):
         self.stream = None
         self.recThread = None
         self.movie = None
-        self.browseFilePat = None
         self.initUI()
 
-
-
-
-    def plot(self):
-        ''' plot some random stuff '''
-        # random data
-        data = [random.random() for i in range(10)]
-
-        # instead of ax.hold(False)
-        self.figure.clear()
-
-        # create an axis
-        ax = self.figure.add_subplot(111)
-
-        # discards the old graph
-        # ax.hold(False) # deprecated, see above
-
-        # plot data
-        ax.plot(data, '*-')
-
-        # refresh canvas
-        self.canvas.draw()
 
     def initUI(self):
         self.setWindowTitle(self.title)
@@ -108,31 +81,10 @@ class Window(QDialog):
         recordHBoxLayout.addWidget(loadingLbl)
         recordHBoxLayout.addWidget(stopRecordBtn)
         form.addRow(recordHBoxLayout)
-
-        #Sound figure
-        # a figure instance to plot on
-        self.figure = plt.figure()
-
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to __init__
-        self.canvas = FigureCanvas(self.figure)
-
-        # this is the Navigation widget
-        # it takes the Canvas widget and a parent
-        self.toolbar = NavigationToolbar(self.canvas, self)
-
-        # set the layout
-        resultsHBoxLayout = QVBoxLayout()
-        resultsHBoxLayout.addWidget(self.toolbar)
-        resultsHBoxLayout.addWidget(self.canvas)
-
+        resultsHBoxLayout = QtWidgets.QHBoxLayout()
         form.addRow(resultsHBoxLayout)
-
-        startRecordBtn.clicked.connect(
-        lambda: self.startRecord(loadingLbl, recordingLbl, startRecordBtn, stopRecordBtn))
-        stopRecordBtn.clicked.connect(
-        lambda: self.stopRecord(loadingLbl, recordingLbl, startRecordBtn, stopRecordBtn, fileBrowserTxt))
-
+        startRecordBtn.clicked.connect(lambda: self.startRecord(loadingLbl,recordingLbl,startRecordBtn,stopRecordBtn))
+        stopRecordBtn.clicked.connect(lambda: self.stopRecord(loadingLbl,recordingLbl,startRecordBtn,stopRecordBtn,fileBrowserTxt,resultsHBoxLayout))
         self.show()
 
     #Opening file browser to import the Wav file.
@@ -145,12 +97,20 @@ class Window(QDialog):
         if len(word) != 0:
             if word.endswith('.wav'):
                 fileBrowserTxt.setText(''+word)
-                self.browseFilePat = fileName
-                self.showWavPlot(fileName)
+                #self.showWavPlot( form, fileName
             else:
                 QMessageBox.about(form, "Error", "Wrong File Type , Please Use Only Wav Files")
-
-
+    #Building the Wav file sound graph
+    def showWavPlot(self, form , filepath):
+        spf = wave.open(filepath, 'r')
+        # Extract Raw Audio from Wav File
+        signal = spf.readframes(-1)
+        signal = np.fromstring(signal, 'Int16')
+        plt.figure(1)
+        plt.title('Signal Wave')
+        plt.plot(signal)
+        #plt.ioff()
+        plt.savefig('Wave.png')
 
     #Recording voice using microphone
     def startRecord(self, loadingLbl,recordingLbl,startRecordBtn,stopRecordBtn):
@@ -180,7 +140,7 @@ class Window(QDialog):
         sys.exit()
 
     #Stopp recording voice using microphone
-    def stopRecord(self,loadingLbl,recordingLbl,startRecordBtn,stopRecordBtn,fileBrowserTxt):
+    def stopRecord(self,loadingLbl,recordingLbl,startRecordBtn,stopRecordBtn,fileBrowserTxt,resultsHBoxLayout):
         self.startRec = False
         loadingLbl.hide()
         stopRecordBtn.hide()
@@ -202,24 +162,21 @@ class Window(QDialog):
         wf.writeframes(b''.join(self.frames))
         wf.close()
         fileBrowserTxt.setText(WAVE_OUTPUT_FILENAME)
+        self.showWavPlot(os.path.dirname(os.path.realpath(__file__))+"\\Records\\"+WAVE_OUTPUT_FILENAME,resultsHBoxLayout)
 
-        self.showWavPlot(os.path.dirname(os.path.realpath(__file__)) + "\\Records\\" + WAVE_OUTPUT_FILENAME)
-
-    def showWavPlot(self, WAVE_OUTPUT_FILENAME ):
-        # create an axis
-        ax = self.figure.add_subplot(111)
-        # plot data
-        spf = wave.open(WAVE_OUTPUT_FILENAME, 'r')
+    def showWavPlot(self, filepath, resultsHBoxLayout):
+        spf = wave.open(filepath, 'r')
+        # Extract Raw Audio from Wav File
         signal = spf.readframes(-1)
         signal = np.fromstring(signal, 'Int16')
-        ax.plot(signal, '*-')
-        # refresh canvas
-        self.canvas.draw()
+        plt.figure(1)
+        plt.title('Signal Wave')
+        plt.plot(signal)
+        plt.show()
+        #resultsHBoxLayout.addWidget(plt.plot)
+        #plt.ioff()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-
-    main = Window()
-    main.show()
-
+    ex = App()
     sys.exit(app.exec_())
