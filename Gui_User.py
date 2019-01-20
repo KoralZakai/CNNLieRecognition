@@ -17,7 +17,7 @@ import os
 
 import random
 
-class Window(QDialog):
+class Window(QWidget):
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
         # init the initial parameters of this GUI
@@ -65,6 +65,18 @@ class Window(QDialog):
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
+        #Creating main container-frame, parent it to QWindow
+        self.main_CF = QtWidgets.QFrame(self)
+        self.main_CF.setStyleSheet('background-color: rgba(150, 0, 0, 1);')
+
+        #the first sub window
+        self.main_CL = QtWidgets.QVBoxLayout(self.main_CF)
+        asset_CGF = QtWidgets.QFrame(self.main_CF)
+        self.main_CL.addWidget(asset_CGF)
+        asset_CGF.setStyleSheet('background-color: rgba(0, 150, 0, 1);')
+        asset_CGL = QtWidgets.QHBoxLayout(asset_CGF)
+
+
         #Setting up the form fields
         form = QtWidgets.QFormLayout()
         self.setLayout(form)
