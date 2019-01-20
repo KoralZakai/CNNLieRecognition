@@ -1,5 +1,6 @@
 from PyQt5 import QtWidgets, uic
 from Functions import Functions as Functions
+import PyQt5
 
 def main():
     func = Functions()
