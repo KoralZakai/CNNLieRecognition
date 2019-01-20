@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5 import QtGui, QtWidgets, uic
-
+from PyQt5.QtCore import Qt
 class App(QWidget):
 
 
@@ -18,16 +18,23 @@ class App(QWidget):
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
-        grid = QtWidgets.QGridLayout()
-        self.setLayout(grid)
-        btn = QtWidgets.QPushButton("1 1",self)
-        grid.addWidget(btn, 0, 0)
-        btn = QtWidgets.QPushButton("1 2",self)
-        grid.addWidget(btn,1,2)
-        btn = QtWidgets.QPushButton("1 3", self)
-        grid.addWidget(btn, 1, 3)
-        btn = QtWidgets.QPushButton("3 2", self)
-        grid.addWidget(btn, 3, 2)
+        form = QtWidgets.QFormLayout()
+        self.setLayout(form)
+        lbl = QtWidgets.QLabel("Lie Detection", self)
+        lbl.setAlignment(Qt.AlignCenter)
+        form.addRow(lbl)
+        lbl = QtWidgets.QLabel("Pick wav record", self)
+        lbl.setAlignment(Qt.AlignCenter)
+        txt = QtWidgets.QLineEdit()
+        lbl.setAlignment(Qt.AlignCenter)
+        btn = QtWidgets.QPushButton("Browse", self
+        horizontal = QtWidgets.Ho
+        form.addRow(lbl,txt,btn)
+        #lbl = QtWidgets.QLabel("Pick audio file:",self)
+        #grid.addWidget(lbl, 3, 3)
+
+        #lbl = QtWidgets.QTextEdit(self)
+        #grid.addWidget(lbl, 0, 0)
         self.show()
 
 if __name__ == '__main__':
