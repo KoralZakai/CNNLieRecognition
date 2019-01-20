@@ -50,9 +50,12 @@ class CNN:
             self.opt = keras.optimizers.RMSprop(lr=learn_rate)
 
     # init data set of csv files ta
-    def createDataSet(self, winstep=0.005):
+    def createDataSet(self):
         # loading all wav files names
+        winstep = 0.005
         filenames = os.listdir("db\\wav")
+        if not os.path.exists("db\MFCC"):
+            os.makedirs("db\MFCC")
         for i in range(len(filenames)):
             (rate, sig) = wav.read("db\\wav\\{0}".format(filenames[i]))
             temp = mfcc(sig, rate, winstep=winstep, numcep=self.column_nbr, nfilt=self.column_nbr)
@@ -163,14 +166,4 @@ class CNN:
                                                   update_freq='epoch')
         history = AccuracyHistory()
         return [tensorBoard, earlyStop, history]
-
-#define functionality inside class
-class AccuracyHistory(keras.callbacks.Callback):
-    def on_train_begin(self, logs={}):
-        self.acc = []
-        self.loss = []
-
-    def on_epoch_end(self, batch, logs={}):
-        self.acc.append(logs.get('acc'))
-        self.loss.append(logs.get('loss'))
 
