@@ -1,4 +1,6 @@
 import ctypes
+
+from matplotlib import cm
 from python_speech_features import mfcc
 import scipy.io.wavfile as wav
 import matplotlib.pyplot as plt
@@ -41,29 +43,6 @@ class Window(QWidget):
         self.movie = None
         self.browseFilePat = None
         self.initUI()
-
-
-
-
-    def plot(self):
-        ''' plot some random stuff '''
-        # random data
-        data = [random.random() for i in range(10)]
-
-        # instead of ax.hold(False)
-        self.figure.clear()
-
-        # create an axis
-        ax = self.figure.add_subplot(111)
-
-        # discards the old graph
-        # ax.hold(False) # deprecated, see above
-
-        # plot data
-        ax.plot(data, '*-')
-
-        # refresh canvas
-        self.canvas.draw()
 
     def initUI(self):
         self.setWindowTitle(self.title)
@@ -130,15 +109,14 @@ class Window(QWidget):
         self.main_layout.addWidget(self.secondsub_Frame)
         self.secondsub_Layout = QtWidgets.QFormLayout(self.secondsub_Frame)
         self.secondsub_Frame.setFixedWidth(self.width)
-        self.secondsub_Frame.setFixedHeight(self.height/2)
+        self.secondsub_Frame.setFixedHeight(self.height/3)
 
         # the third sub window
         self.thirdsub_Frame = QtWidgets.QFrame(self.main_frame)
         self.main_layout.addWidget(self.thirdsub_Frame)
         self.thirdsub_Layout = QtWidgets.QFormLayout(self.thirdsub_Frame)
-        self.thirdsub_Frame.setStyleSheet("QLabel {background-color: red;}")
         self.thirdsub_Frame.setFixedWidth(self.width)
-        self.thirdsub_Frame.setFixedHeight(self.height / 2)
+        self.thirdsub_Frame.setFixedHeight(self.height / 3)
 
 
         self.startRecordBtn.clicked.connect(lambda: self.startRecord())
@@ -224,8 +202,22 @@ class Window(QWidget):
             child = self.secondsub_Layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
+        while self.thirdsub_Layout.count():
+            child = self.thirdsub_Layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
 
     def showWavPlot(self, WAVE_OUTPUT_FILENAME ):
+        movieGraph = QtGui.QMovie("Pictures/loading.gif")
+        loadingGraphLbl = QtWidgets.QLabel('', self)
+        loadingGraphLbl.setMaximumHeight(100)
+        loadingGraphLbl.setMaximumWidth(100)
+
+        loadingGraphLbl.setMovie(movieGraph)
+        self.firstsub_Layout.addWidget(loadingGraphLbl)
+
+        movieGraph.start()
+
         #clear the previues graphs
         self.clearGraph()
         # Sound figure
@@ -255,23 +247,29 @@ class Window(QWidget):
         #drawing mfcc graph
         (rate, sig) = wav.read(WAVE_OUTPUT_FILENAME)
         mfcc_feat = mfcc(sig, rate)
-         # Sound figure
+        mfcc_data = np.swapaxes(mfcc_feat, 0, 1)
+
+        # Sound figure
         # a figure instance to plot on
         self.mfccfigure = plt.figure()
 
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
-        self.mfcccanvas = FigureCanvas(self.figure)
+        self.mfcccanvas = FigureCanvas(self.mfccfigure)
 
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
-        self.mfcctoolbar = NavigationToolbar(self.canvas, self)
+        self.mfcctoolbar = NavigationToolbar(self.mfcccanvas, self)
         self.thirdsub_Layout.addWidget(self.mfcctoolbar)
         self.thirdsub_Layout.addWidget(self.mfcccanvas)
 
         # create an axis
-        mfccax = self.mfccfigure.add_subplot(111)
-        self.mfcccanvas
+        ax = self.mfccfigure.add_subplot(111)
+        ax.set_title('MFCC - '+WAVE_OUTPUT_FILENAME)
+        #ax.plot(mfcc_feat,'*-')
+        ax.imshow(mfcc_data, interpolation='nearest', origin='lower', aspect='auto')
+
+        self.mfcccanvas.draw()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
