@@ -9,17 +9,17 @@ from python_speech_features import mfcc
 import scipy.io.wavfile as wav
 import numpy as np
 import os
+import tensorflow as tf
 from keras import backend as K
 from keras.models import load_model
-
+from PyQt5 import QtCore
 CLASSES_NBR = 2
 VERBOSE = 1
 HIDDEN_NBR = 1000
 INPUTFILES_NBR = 535
 TESTFILES_NBR = 30
 
-
-class CNN:
+class CNN():
     # constructor to initialize parameters for data and model
     # batch_size - int value number of training examples utilized in one iteration
     # train_perc - the percent of data which usig to train the model
@@ -28,8 +28,9 @@ class CNN:
     # optimizer - optimizer for model could be one of ('sgd','adam','rmsprop')
     # column_nbr - number of columns in the input data minimum 32
     def __init__(self, calbackFunc, batch_size=10, train_perc=0.8, epoch_nbr=10, learn_rate=0.001, optimizer='adam', column_nbr=32):
-        K.clear_session()
-        self.historyCallBackFunction=calbackFunc()
+        super().__init__()
+
+        self.historyCallBackFunction = calbackFunc()
         self._setOptimizer(optimizer, learn_rate)
         self.epoch_nbr = epoch_nbr
         self.batch_size = batch_size
@@ -39,11 +40,26 @@ class CNN:
         self.column_nbr = column_nbr
         self.line_nbr = 225
 
+        self.session = tf.Session()
+        K.set_session(self.session)
+        self.session.run(tf.global_variables_initializer())
+
+        self.createNewVGG16Model()
+
+
+        self.default_graph = tf.get_default_graph()
+
+        #self.default_graph.finalize()  # avoid modifications
+
+
+
+
+
     # initialize the optimizer of the model
     def _setOptimizer(self, optimizer, learn_rate):
         if optimizer == 'adam':
             self.opt = keras.optimizers.Adam(lr=learn_rate)
-        elif optimizer == 'SGD':
+        elif optimizer == 'sgd':
             self.opt = keras.optimizers.SGD(lr=learn_rate)
         else:
             self.opt = keras.optimizers.RMSprop(lr=learn_rate)
@@ -69,7 +85,6 @@ class CNN:
             else:
                 self.label[i] = False
 
-
     # load csv files into arrays
     def load_data(self):
         # shuffle the data
@@ -88,7 +103,9 @@ class CNN:
 
     # create VGG16 model
     def createNewVGG16Model(self):
-
+        config = tf.ConfigProto(log_device_placement=False, allow_soft_placement=True)
+        sess = tf.Session(config=config)
+        K.set_session(sess)  # K is keras backend
         # getting convolution layers with weights
         VGG16_conv2D = VGG16(weights='imagenet', include_top=False, input_shape=(225, self.column_nbr, 3))
         # don't change training weights
@@ -117,6 +134,7 @@ class CNN:
         input[0] =self.data[0]
         res =self.model.predict(input, verbose=1)
         return float(res[0][0]), float(res[0][1])
+
     def trainModel(self):
         # normalize training data
         max = np.max(self.data)
@@ -126,16 +144,15 @@ class CNN:
         self.label = keras.utils.to_categorical(self.label, CLASSES_NBR)
         self.data = self.data.reshape(self.data.shape[0], self.line_nbr, self.column_nbr, 3)
         # normalize validating data
-
-        # fit the model with training data
-        history = self.model.fit(self.data,
-                                 self.label,
-                                 batch_size=self.batch_size,
-                                 epochs=self.epoch_nbr,
-                                 validation_split=1-self.train_percent,
-                                 shuffle=True,
-                                 verbose=VERBOSE,
-                                 callbacks=self.getCallBacks())
+        with self.default_graph.as_default():
+            history = self.model.fit(self.data,
+                                     self.label,
+                                     batch_size=self.batch_size,
+                                     epochs=self.epoch_nbr,
+                                     validation_split=1-self.train_percent,
+                                     shuffle=True,
+                                     verbose=VERBOSE,
+                                     callbacks=self.getCallBacks())
         return history
 
     def validateModel(self):
@@ -161,5 +178,5 @@ class CNN:
                                                   embeddings_metadata=None,
                                                   embeddings_data=None,
                                                   update_freq='epoch')
-        return [tensorBoard, earlyStop, self.historyCallBackFunction]
+        return [tensorBoard, earlyStop]
 

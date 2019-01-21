@@ -1,13 +1,15 @@
 import sys
+import threading
 from enum import Enum
 from select import select
 
-import keras
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5 import QtGui, QtWidgets, uic
 from PyQt5.QtCore import Qt
+from PyQt5 import QtCore
 from CNN import  CNN as CNN
-
+from keras.callbacks import Callback
+from multiprocessing.pool import ThreadPool
 
 class Feature():
 
@@ -33,7 +35,7 @@ class App(QWidget):
     def _initModelDefaultParams(self):
         self.defaultDict = {'Batch size': 200, 'Learning Rate': 0.01,'Epoch Number': 1,'Column Number':32}
         self.comboText = 'sgd'
-        self.train_percent = 0.5
+        self.train_percent = 0.9
 
     def _initUI(self):
         self.setWindowTitle(self.title)
@@ -42,7 +44,7 @@ class App(QWidget):
         form = QtWidgets.QFormLayout()
         self.setLayout(form)
         formTitleLbl = QtWidgets.QLabel('Admin Management Settings')
-        formTitleLbl.setContentsMargins(Qt.AlignCenter,0,0,50)
+        formTitleLbl.setContentsMargins(Qt.AlignCenter, 0, 0, 50)
         myFont = QtGui.QFont()
         myFont.setBold(True)
         myFont.setPixelSize(25)
@@ -64,23 +66,27 @@ class App(QWidget):
             i += 1
         lblComboBox, comboBox = self._initCombobox()
         form.addRow(lblComboBox, comboBox)
-        train_percentLbl =QtWidgets.QLabel('Training percent =  50%')
-        learnRateScale = QtWidgets.QSlider(Qt.Horizontal)
-        learnRateScale.setFixedWidth(150)
-        learnRateScale.setMinimum(0)
-        learnRateScale.setMaximum(100)
-        learnRateScale.setTickInterval(1)
-        learnRateScale.setValue(50)
-        learnRateScale.valueChanged.connect(lambda: self.updateSlideValue(learnRateScale,train_percentLbl))
-        form.addRow(train_percentLbl, learnRateScale)
+        train_percentLbl,train_percentScale = self._initSlider()
+        form.addRow(train_percentLbl, train_percentScale)
 
-        btnBack = QtWidgets.QPushButton("Back")
-        btnStartLearnPhase = QtWidgets.QPushButton("Start")
-        btnStartLearnPhase.setFixedWidth(150)
-        form.addRow(btnBack,btnStartLearnPhase)
-        btnStartLearnPhase.clicked.connect(lambda: self.startTrain())
+        self.btnBack = QtWidgets.QPushButton("Back")
+        self.btnStartLearnPhase = QtWidgets.QPushButton("Start")
+        self.btnStartLearnPhase.setFixedWidth(150)
+        form.addRow(self.btnBack,self.btnStartLearnPhase)
+        self.btnStartLearnPhase.clicked.connect(lambda: self.learnPhase())
 
         self.show()
+
+    def _initSlider(self):
+        train_percentLbl = QtWidgets.QLabel('Training percent =  50%')
+        train_percentScale = QtWidgets.QSlider(Qt.Horizontal)
+        train_percentScale.setFixedWidth(150)
+        train_percentScale.setMinimum(0)
+        train_percentScale.setMaximum(100)
+        train_percentScale.setTickInterval(1)
+        train_percentScale.setValue(80)
+        train_percentScale.valueChanged.connect(lambda: self.updateSlideValue(train_percentScale, train_percentLbl))
+        return train_percentLbl,train_percentScale
 
     def _initCombobox(self):
         comboBox = QtWidgets.QComboBox(self)
@@ -99,28 +105,57 @@ class App(QWidget):
         self.train_percent = learnRateScale.value()/100
         train_percentLbl.setText('Training percent =  '+str(learnRateScale.value())+'%  ')
 
-    def startTrain(self):
-        batch_size= int(self.arrTxt[Feature.BATCH_SIZE].toPlainText())
-        learning_rate = float(self.arrTxt[Feature.LEARN_RATE].toPlainText())
-        epoch_nbr = int(self.arrTxt[Feature.EPOCH_NBR].toPlainText())
-        feature_nbr = int(self.arrTxt[Feature.FEATURE_NBR].toPlainText())
-        self.CNN = CNN(calbackFunc=AccuracyHistory,
-                       batch_size=batch_size,
-                       train_perc=self.train_percent,
-                       epoch_nbr=epoch_nbr,
-                       column_nbr=feature_nbr,
-                       optimizer=self.comboText,
-                       learn_rate=learning_rate)
-        self.CNN.createNewVGG16Model()
-        print("-----------------creating dataset-----------------")
-        self.CNN.createDataSet()
-        print("-----------------train model----------------")
-        self.CNN.trainModel()
-        print(self.CNN.predict(None))
 
+
+    def learnPhase(self):
+        if self.btnStartLearnPhase.text()=="Start":
+            self.btnStartLearnPhase.setText("Cancel")
+            batch_size = int(self.arrTxt[Feature.BATCH_SIZE].toPlainText())
+            learning_rate = float(self.arrTxt[Feature.LEARN_RATE].toPlainText())
+            epoch_nbr = int(self.arrTxt[Feature.EPOCH_NBR].toPlainText())
+            feature_nbr = int(self.arrTxt[Feature.FEATURE_NBR].toPlainText())
+            self.CNN_model = CNN(calbackFunc=AccuracyHistory,
+                           batch_size=batch_size,
+                           train_perc=self.train_percent,
+                           epoch_nbr=epoch_nbr,
+                           column_nbr=feature_nbr,
+                           optimizer=self.comboText,
+                           learn_rate=learning_rate)
+
+            self.pool = ThreadPool(processes=1)
+            self.pool.apply_async(task1)
+        else:
+            #self.AsyncTask.stop()
+            #self.AsyncTask = None
+            self.pool.terminate()
+            self.pool.join()
+            self.btnStartLearnPhase.setText("Start")
+
+def task1(self):
+    print("-----------------creating dataset-----------------")
+    self.CNN_model.createDataSet()
+    print("-----------------train model----------------")
+    self.CNN_model.trainModel()
+    print(self.CNN.predict(None))
+
+
+    class AsyncTrainModel(QtCore.QThread):
+        def __init__(self,model):
+            super().__init__()
+            self.model = model
+
+        def run(self):
+            print("-----------------creating dataset-----------------")
+            self.model.createDataSet()
+            print("-----------------train model----------------")
+            self.model.trainModel()
+            print(self.CNN.predict(None))
+
+        def stop(self):
+            self.wait()
 
 #define functionality inside class
-class AccuracyHistory(keras.callbacks.Callback):
+class AccuracyHistory(Callback):
     def on_train_begin(self, logs={}):
         self.acc = []
         self.loss = []
