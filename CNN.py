@@ -3,6 +3,7 @@ import keras
 import tensorflow as tf
 from keras import regularizers
 from keras.applications.vgg16 import VGG16
+from keras.callbacks import Callback
 from keras.layers import Dense, Flatten, Activation
 from keras.models import Model
 from python_speech_features import mfcc
@@ -30,7 +31,7 @@ class CNN():
     def __init__(self, calbackFunc, batch_size=10, train_perc=0.8, epoch_nbr=10, learn_rate=0.001, optimizer='adam', column_nbr=32):
         super().__init__()
 
-        self.historyCallBackFunction = calbackFunc()
+        self.historyCallBackFunction = calbackFunc
         self._setOptimizer(optimizer, learn_rate)
         self.epoch_nbr = epoch_nbr
         self.batch_size = batch_size
@@ -178,5 +179,7 @@ class CNN():
                                                   embeddings_metadata=None,
                                                   embeddings_data=None,
                                                   update_freq='epoch')
-        return [tensorBoard, earlyStop]
+        return [tensorBoard, earlyStop, self.historyCallBackFunction]
+
+
 
