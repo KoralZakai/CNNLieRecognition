@@ -72,10 +72,12 @@ class Window(QWidget):
         self.fileBrowserTxt.setFixedHeight(25)
         self.fileBrowserLbl.setFixedWidth(150)
         self.fileBrowserLbl.setFixedHeight(25)
-        self.fileBrowserBtn = QtWidgets.QPushButton("file Browse", self)
-        self.fileBrowserBtn.setMaximumHeight(25)
-        self.fileBrowserBtn.setMaximumWidth(75)
-
+        self.fileBrowserBtn = QtWidgets.QPushButton("", self)
+        self.fileBrowserBtn.setMaximumHeight(100)
+        self.fileBrowserBtn.setMaximumWidth(100)
+        self.fileBrowserBtn.setFixedHeight(27)
+        self.fileBrowserBtn.setFixedWidth(27)
+        self.fileBrowserBtn.setStyleSheet("QPushButton {background: url(Pictures/filebrowse.png) no-repeat transparent;} ")
         self.fileBrowserBtn.clicked.connect(lambda: self.openFile(self.firstsub_Layout))
         fileBrowseHBoxLayout.addWidget(self.fileBrowserLbl,1,0)
         fileBrowseHBoxLayout.addWidget(self.fileBrowserTxt,1,1)
@@ -84,25 +86,37 @@ class Window(QWidget):
         self.firstsub_Layout.addRow(fileBrowseHBoxLayout)
 
         recordHBoxLayout = QtWidgets.QGridLayout()
-        self.startRecordBtn = QtWidgets.QPushButton("Start Record", self)
-        self.startRecordBtn.setFixedHeight(25)
+        self.startRecordBtn = QtWidgets.QPushButton("", self)
+        self.startRecordBtn.setFixedHeight(50)
+        self.startRecordBtn.setFixedWidth(50)
+        self.startRecordBtn.setStyleSheet("QPushButton {background: url(Pictures/microphone1.png) no-repeat transparent;} ")
         self.recordingLbl = QtWidgets.QLabel('Recording', self)
+        self.recordingLbl.setContentsMargins(self.height/2,self.width/2,50,50)
         self.recordingLbl.setVisible(False)
         self.recordingLbl.setFixedWidth(100)
         self.recordingLbl.setFixedHeight(25)
         self.loadingLbl = QtWidgets.QLabel('', self)
         self.loadingLbl.setFixedWidth(200)
         self.loadingLbl.setFixedHeight(25)
-        self.stopRecordBtn = QtWidgets.QPushButton("Stop Record", self)
+        self.stopRecordBtn = QtWidgets.QPushButton("", self)
+        self.stopRecordBtn.setStyleSheet("QPushButton {background: url(Pictures/microphone2.png) no-repeat transparent;} ")
         self.stopRecordBtn.setVisible(False)
-        self.stopRecordBtn.setFixedWidth(75)
-        self.stopRecordBtn.setFixedHeight(25)
+        self.stopRecordBtn.setFixedWidth(50)
+        self.stopRecordBtn.setFixedHeight(50)
         recordHBoxLayout.addWidget(self.startRecordBtn,1,1)
-        recordHBoxLayout.addWidget(self.recordingLbl,1,2)
-        recordHBoxLayout.addWidget(self.loadingLbl,1,3)
-        recordHBoxLayout.addWidget(self.stopRecordBtn,1,4)
+
+        recordHBoxLayout.addWidget(self.stopRecordBtn,1,1)
         recordHBoxLayout.setAlignment(Qt.AlignCenter)
         self.firstsub_Layout.addRow(recordHBoxLayout)
+
+        # the second sub window
+        self.betweenfirstsecondsub_Frame = QtWidgets.QFrame(self.main_frame)
+        self.main_layout.addWidget(self.betweenfirstsecondsub_Frame)
+        self.betweenfirstsecondsub_Layout = QtWidgets.QGridLayout(self.betweenfirstsecondsub_Frame)
+        self.betweenfirstsecondsub_Frame.setFixedWidth(self.width)
+        self.betweenfirstsecondsub_Frame.setFixedHeight(30)
+        self.betweenfirstsecondsub_Layout.addWidget(self.recordingLbl,1,1)
+        self.betweenfirstsecondsub_Layout.addWidget(self.loadingLbl,1,2)
 
         # the second sub window
         self.secondsub_Frame = QtWidgets.QFrame(self.main_frame)
@@ -170,7 +184,20 @@ class Window(QWidget):
             self.frames.append(data)
         sys.exit()
 
+    #launching the waiting gif
+    def startWaitingGif(self):
+        self.movieGraphWait = QtGui.QMovie("Pictures/loading2.gif")
+        loadingGraphLbl = QtWidgets.QLabel('', self)
+        loadingGraphLbl.setMaximumHeight(100)
+        loadingGraphLbl.setMaximumWidth(100)
+        loadingGraphLbl.setMovie(self.movieGraphWait)
+        self.firstsub_Layout.addWidget(loadingGraphLbl)
+        self.movieGraphWait.start()
+
+    def stopWaitingGif(self):
     #Stopp recording voice using microphone
+        print()
+
     def stopRecord(self):
         self.startRec = False
         self.loadingLbl.setVisible(False)
@@ -195,7 +222,7 @@ class Window(QWidget):
         self.fileBrowserTxt.setText(WAVE_OUTPUT_FILENAME)
 
 
-        self.showWavPlot(os.path.dirname(os.path.realpath(__file__)) + "\\Records\\" + WAVE_OUTPUT_FILENAME)
+        self.showWavPlot(os.path.dirname(os.path.realpath(__file__)) + "\\Records\\" + WAVE_OUTPUT_FILENAME,WAVE_OUTPUT_FILENAME)
 
     def clearGraph(self):
         while self.secondsub_Layout.count():
@@ -207,17 +234,10 @@ class Window(QWidget):
             if child.widget():
                 child.widget().deleteLater()
 
-    def showWavPlot(self, WAVE_OUTPUT_FILENAME ):
-        movieGraph = QtGui.QMovie("Pictures/loading.gif")
-        loadingGraphLbl = QtWidgets.QLabel('', self)
-        loadingGraphLbl.setMaximumHeight(100)
-        loadingGraphLbl.setMaximumWidth(100)
+    def showWavPlot(self, WAVE_OUTPUT_PATH,WAVE_OUTPUT_FILE_NAME ):
 
-        loadingGraphLbl.setMovie(movieGraph)
-        self.firstsub_Layout.addWidget(loadingGraphLbl)
-
-        movieGraph.start()
-
+        #self.startWaitingGifThread = threading.Thread(target=self.startWaitingGif())
+        #self.startWaitingGifThread.start()
         #clear the previues graphs
         self.clearGraph()
         # Sound figure
@@ -237,7 +257,7 @@ class Window(QWidget):
         # create an axis
         ax = self.figure.add_subplot(111)
         # plot data
-        spf = wave.open(WAVE_OUTPUT_FILENAME, 'r')
+        spf = wave.open(WAVE_OUTPUT_PATH, 'r')
         signal = spf.readframes(-1)
         signal = np.fromstring(signal, 'Int16')
         ax.plot(signal, '*-')
@@ -245,7 +265,7 @@ class Window(QWidget):
         self.canvas.draw()
 
         #drawing mfcc graph
-        (rate, sig) = wav.read(WAVE_OUTPUT_FILENAME)
+        (rate, sig) = wav.read(WAVE_OUTPUT_PATH)
         mfcc_feat = mfcc(sig, rate)
         mfcc_data = np.swapaxes(mfcc_feat, 0, 1)
 
@@ -265,7 +285,7 @@ class Window(QWidget):
 
         # create an axis
         ax = self.mfccfigure.add_subplot(111)
-        ax.set_title('MFCC - '+WAVE_OUTPUT_FILENAME)
+        ax.set_title('MFCC - '+WAVE_OUTPUT_FILE_NAME)
         #ax.plot(mfcc_feat,'*-')
         ax.imshow(mfcc_data, interpolation='nearest', origin='lower', aspect='auto')
 
