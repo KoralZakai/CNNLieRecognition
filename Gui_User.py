@@ -1,12 +1,9 @@
 import ctypes
-
-from matplotlib import cm
+from multiprocessing.pool import ThreadPool
 from python_speech_features import mfcc
 import scipy.io.wavfile as wav
-import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-import matplotlib.pyplot as plt
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5 import QtGui, QtWidgets, uic
 import time
@@ -19,7 +16,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from PyQt5.QtCore import Qt
-import random
 
 class Window(QWidget):
     def __init__(self, parent=None):
@@ -254,7 +250,7 @@ class Window(QWidget):
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
         self.toolbar = NavigationToolbar(self.canvas, self)
-        self.secondsub_Layout.addWidget(self.toolbar)
+        #self.secondsub_Layout.addWidget(self.toolbar)
         self.secondsub_Layout.addWidget(self.canvas)
 
         # create an axis
@@ -283,7 +279,7 @@ class Window(QWidget):
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
         self.mfcctoolbar = NavigationToolbar(self.mfcccanvas, self)
-        self.thirdsub_Layout.addWidget(self.mfcctoolbar)
+        #self.thirdsub_Layout.addWidget(self.mfcctoolbar)
         self.thirdsub_Layout.addWidget(self.mfcccanvas)
 
         # create an axis
