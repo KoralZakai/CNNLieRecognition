@@ -68,6 +68,8 @@ class Window(QWidget):
         fileBrowseHBoxLayout = QtWidgets.QGridLayout()
         self.fileBrowserTxt=QtWidgets.QTextEdit("", self)
         self.fileBrowserLbl=QtWidgets.QLabel('Pick Wav File', self)
+        myFont.setPixelSize(18)
+        self.fileBrowserLbl.setFont(myFont)
         self.fileBrowserTxt.setFixedWidth(500)
         self.fileBrowserTxt.setFixedHeight(25)
         self.fileBrowserLbl.setFixedWidth(150)
@@ -87,8 +89,8 @@ class Window(QWidget):
 
         recordHBoxLayout = QtWidgets.QGridLayout()
         self.startRecordBtn = QtWidgets.QPushButton("", self)
-        self.startRecordBtn.setFixedHeight(50)
-        self.startRecordBtn.setFixedWidth(50)
+        self.startRecordBtn.setFixedHeight(25)
+        self.startRecordBtn.setFixedWidth(25)
         self.startRecordBtn.setStyleSheet("QPushButton {background: url(Pictures/microphone1.png) no-repeat transparent;} ")
         self.recordingLbl = QtWidgets.QLabel('Recording', self)
         self.recordingLbl.setContentsMargins(self.height/2,self.width/2,50,50)
@@ -98,25 +100,26 @@ class Window(QWidget):
         self.loadingLbl = QtWidgets.QLabel('', self)
         self.loadingLbl.setFixedWidth(200)
         self.loadingLbl.setFixedHeight(25)
+
         self.stopRecordBtn = QtWidgets.QPushButton("", self)
         self.stopRecordBtn.setStyleSheet("QPushButton {background: url(Pictures/microphone2.png) no-repeat transparent;} ")
         self.stopRecordBtn.setVisible(False)
-        self.stopRecordBtn.setFixedWidth(50)
-        self.stopRecordBtn.setFixedHeight(50)
-        recordHBoxLayout.addWidget(self.startRecordBtn,1,1)
-
-        recordHBoxLayout.addWidget(self.stopRecordBtn,1,1)
+        self.stopRecordBtn.setFixedWidth(25)
+        self.stopRecordBtn.setFixedHeight(25)
+        fileBrowseHBoxLayout.addWidget(self.startRecordBtn,1,4)
+        fileBrowseHBoxLayout.addWidget(self.stopRecordBtn,1,4)
         recordHBoxLayout.setAlignment(Qt.AlignCenter)
         self.firstsub_Layout.addRow(recordHBoxLayout)
 
-        # the second sub window
+        # the between first and second  sub window
         self.betweenfirstsecondsub_Frame = QtWidgets.QFrame(self.main_frame)
         self.main_layout.addWidget(self.betweenfirstsecondsub_Frame)
-        self.betweenfirstsecondsub_Layout = QtWidgets.QGridLayout(self.betweenfirstsecondsub_Frame)
+        self.betweenfirstsecondsub_Layout = QtWidgets.QFormLayout(self.betweenfirstsecondsub_Frame)
         self.betweenfirstsecondsub_Frame.setFixedWidth(self.width)
         self.betweenfirstsecondsub_Frame.setFixedHeight(30)
-        self.betweenfirstsecondsub_Layout.addWidget(self.recordingLbl,1,1)
-        self.betweenfirstsecondsub_Layout.addWidget(self.loadingLbl,1,2)
+        self.betweenfirstsecondsub_Layout.addRow(self.recordingLbl,self.loadingLbl)
+        self.betweenfirstsecondsub_Layout.setContentsMargins(self.width/2-self.recordingLbl.width(),0,0,0)
+        #self.betweenfirstsecondsub_Layout.addWidget(self.loadingLbl,1,1)
 
         # the second sub window
         self.secondsub_Frame = QtWidgets.QFrame(self.main_frame)
@@ -222,7 +225,7 @@ class Window(QWidget):
         self.fileBrowserTxt.setText(WAVE_OUTPUT_FILENAME)
 
 
-        self.showWavPlot(os.path.dirname(os.path.realpath(__file__)) + "\\Records\\" + WAVE_OUTPUT_FILENAME,WAVE_OUTPUT_FILENAME)
+        self.showWavPlot(os.path.dirname(os.path.realpath(__file__)) + "\\Records\\" + WAVE_OUTPUT_FILENAME)
 
     def clearGraph(self):
         while self.secondsub_Layout.count():
@@ -234,7 +237,7 @@ class Window(QWidget):
             if child.widget():
                 child.widget().deleteLater()
 
-    def showWavPlot(self, WAVE_OUTPUT_PATH,WAVE_OUTPUT_FILE_NAME ):
+    def showWavPlot(self, WAVE_OUTPUT_PATH ):
 
         #self.startWaitingGifThread = threading.Thread(target=self.startWaitingGif())
         #self.startWaitingGifThread.start()
@@ -285,7 +288,12 @@ class Window(QWidget):
 
         # create an axis
         ax = self.mfccfigure.add_subplot(111)
-        ax.set_title('MFCC - '+WAVE_OUTPUT_FILE_NAME)
+        word = WAVE_OUTPUT_PATH.split('/')
+        if len(word) == 1:
+            word = WAVE_OUTPUT_PATH.split('\\')
+
+        word = word[len(word) - 1]
+        ax.set_title('MFCC - '+word)
         #ax.plot(mfcc_feat,'*-')
         ax.imshow(mfcc_data, interpolation='nearest', origin='lower', aspect='auto')
 
