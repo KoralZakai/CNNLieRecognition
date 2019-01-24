@@ -20,10 +20,10 @@ from PyQt5.QtCore import Qt
 class Window(QWidget):
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
+        # init the initial parameters of this GUI
         user32 = ctypes.windll.user32
         user32.SetProcessDPIAware()
         [w, h] = [user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)]
-        # init the initial parameters of this GUI
         self.title = 'Lie Detection'
         self.width = w
         self.height = h
@@ -53,6 +53,7 @@ class Window(QWidget):
         self.firstsub_Layout = QtWidgets.QFormLayout(self.firstsub_Frame)
 
         #Setting up the form fields
+        #form title init
         self.formTitleLbl = QtWidgets.QLabel('Lie Detection')
         self.formTitleLbl.setAlignment(Qt.AlignCenter)
         self.formTitleLbl.setContentsMargins(0,0,0,20)
@@ -61,6 +62,7 @@ class Window(QWidget):
         myFont.setPixelSize(25)
         self. formTitleLbl.setFont(myFont)
         self.firstsub_Layout.addRow(self.formTitleLbl)
+        #init the browse file fields - lable , textfield, file browse button , start/stop record buttons
         fileBrowseHBoxLayout = QtWidgets.QGridLayout()
         self.fileBrowserTxt=QtWidgets.QTextEdit("", self)
         self.fileBrowserLbl=QtWidgets.QLabel('Pick Wav File', self)
@@ -82,7 +84,6 @@ class Window(QWidget):
         fileBrowseHBoxLayout.addWidget(self.fileBrowserBtn,1,2)
         fileBrowseHBoxLayout.setAlignment(Qt.AlignCenter)
         self.firstsub_Layout.addRow(fileBrowseHBoxLayout)
-
         recordHBoxLayout = QtWidgets.QGridLayout()
         self.startRecordBtn = QtWidgets.QPushButton("", self)
         self.startRecordBtn.setFixedHeight(25)
@@ -96,7 +97,6 @@ class Window(QWidget):
         self.loadingLbl = QtWidgets.QLabel('', self)
         self.loadingLbl.setFixedWidth(200)
         self.loadingLbl.setFixedHeight(25)
-
         self.stopRecordBtn = QtWidgets.QPushButton("", self)
         self.stopRecordBtn.setStyleSheet("QPushButton {background: url(Pictures/microphone2.png) no-repeat transparent;} ")
         self.stopRecordBtn.setVisible(False)
@@ -107,34 +107,34 @@ class Window(QWidget):
         recordHBoxLayout.setAlignment(Qt.AlignCenter)
         self.firstsub_Layout.addRow(recordHBoxLayout)
 
-        # the between first and second  sub window
-        self.betweenfirstsecondsub_Frame = QtWidgets.QFrame(self.main_frame)
-        self.main_layout.addWidget(self.betweenfirstsecondsub_Frame)
-        self.betweenfirstsecondsub_Layout = QtWidgets.QFormLayout(self.betweenfirstsecondsub_Frame)
-        self.betweenfirstsecondsub_Frame.setFixedWidth(self.width)
-        self.betweenfirstsecondsub_Frame.setFixedHeight(30)
-        self.betweenfirstsecondsub_Layout.addRow(self.recordingLbl,self.loadingLbl)
-        self.betweenfirstsecondsub_Layout.setContentsMargins(self.width/2-self.recordingLbl.width(),0,0,0)
-        #self.betweenfirstsecondsub_Layout.addWidget(self.loadingLbl,1,1)
-
-        # the second sub window
+        # The second sub window - loading gif window
         self.secondsub_Frame = QtWidgets.QFrame(self.main_frame)
         self.main_layout.addWidget(self.secondsub_Frame)
         self.secondsub_Layout = QtWidgets.QFormLayout(self.secondsub_Frame)
         self.secondsub_Frame.setFixedWidth(self.width)
-        self.secondsub_Frame.setFixedHeight(self.height/3)
+        self.secondsub_Frame.setFixedHeight(30)
+        self.secondsub_Layout.addRow(self.recordingLbl,self.loadingLbl)
+        self.secondsub_Frame.setContentsMargins(self.width/2-self.recordingLbl.width(),0,0,0)
 
         # the third sub window
         self.thirdsub_Frame = QtWidgets.QFrame(self.main_frame)
         self.main_layout.addWidget(self.thirdsub_Frame)
-        self.thirdsub_Layout = QtWidgets.QFormLayout(self.thirdsub_Frame)
+        self.thirdsub_Layout = QtWidgets.QGridLayout(self.thirdsub_Frame)
         self.thirdsub_Frame.setFixedWidth(self.width)
-        self.thirdsub_Frame.setFixedHeight(self.height / 3)
+        self.thirdsub_Frame.setFixedHeight(self.height/3)
 
+        # the 4rth sub window
+        self.fourthsub_Frame = QtWidgets.QFrame(self.main_frame)
+        self.main_layout.addWidget(self.fourthsub_Frame)
+        self.fourthsub_Layout = QtWidgets.QFormLayout(self.fourthsub_Frame)
+        self.fourthsub_Frame.setFixedWidth(self.width)
+        self.fourthsub_Frame.setFixedHeight(self.height / 3)
 
+        # assign functions to buttons
         self.startRecordBtn.clicked.connect(lambda: self.startRecord())
         self.stopRecordBtn.clicked.connect(lambda: self.stopRecord())
 
+        #show the window
         self.show()
 
     #Opening file browser to import the Wav file.
@@ -151,8 +151,6 @@ class Window(QWidget):
                 self.showWavPlot(fileName)
             else:
                 QMessageBox.about(form, "Error", "Wrong File Type , Please Use Only Wav Files")
-
-
 
     #Recording voice using microphone
     def startRecord(self):
@@ -174,7 +172,6 @@ class Window(QWidget):
         self.frames = []
         self.recThread = threading.Thread(target = self.inputData)
         self.recThread.start()
-
 
     #getting stream of data from the microphone
     def inputData(self):
@@ -219,24 +216,21 @@ class Window(QWidget):
         wf.writeframes(b''.join(self.frames))
         wf.close()
         self.fileBrowserTxt.setText(WAVE_OUTPUT_FILENAME)
-
-
         self.showWavPlot(os.path.dirname(os.path.realpath(__file__)) + "\\Records\\" + WAVE_OUTPUT_FILENAME)
 
+    #clearing all the layouts fields
     def clearGraph(self):
-        while self.secondsub_Layout.count():
-            child = self.secondsub_Layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
         while self.thirdsub_Layout.count():
             child = self.thirdsub_Layout.takeAt(0)
             if child.widget():
                 child.widget().deleteLater()
+        while self.fourthsub_Layout.count():
+            child = self.fourthsub_Layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
 
+    #drawing graphs for the wav file
     def showWavPlot(self, WAVE_OUTPUT_PATH ):
-
-        #self.startWaitingGifThread = threading.Thread(target=self.startWaitingGif())
-        #self.startWaitingGifThread.start()
         #clear the previues graphs
         self.clearGraph()
         # Sound figure
@@ -251,7 +245,7 @@ class Window(QWidget):
         # it takes the Canvas widget and a parent
         self.toolbar = NavigationToolbar(self.canvas, self)
         #self.secondsub_Layout.addWidget(self.toolbar)
-        self.secondsub_Layout.addWidget(self.canvas)
+        self.thirdsub_Layout.addWidget(self.canvas,1,1)
 
         # create an axis
         ax = self.figure.add_subplot(111)
@@ -280,7 +274,7 @@ class Window(QWidget):
         # it takes the Canvas widget and a parent
         self.mfcctoolbar = NavigationToolbar(self.mfcccanvas, self)
         #self.thirdsub_Layout.addWidget(self.mfcctoolbar)
-        self.thirdsub_Layout.addWidget(self.mfcccanvas)
+        self.thirdsub_Layout.addWidget(self.mfcccanvas,1,2)
 
         # create an axis
         ax = self.mfccfigure.add_subplot(111)
@@ -297,8 +291,6 @@ class Window(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-
     main = Window()
     main.show()
-
     sys.exit(app.exec_())
