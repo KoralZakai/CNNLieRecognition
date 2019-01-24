@@ -1,5 +1,7 @@
 import ctypes
 from multiprocessing.pool import ThreadPool
+
+from matplotlib import cm
 from python_speech_features import mfcc
 import scipy.io.wavfile as wav
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -16,7 +18,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from PyQt5.QtCore import Qt
-
+import pyqtgraph
 class Window(QWidget):
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
@@ -31,13 +33,18 @@ class Window(QWidget):
         self.CHUNK = 1024
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 2
+        self.NUMCEP = 13
         self.RATE = 44100
         self.frames = None
         self.pyrecorded = None
         self.stream = None
         self.recThread = None
         self.movie = None
-        self.browseFilePat = None
+        self.figureSoundWav = None
+        self.figureMFCC = None
+        self.WAVE_OUTPUT_FILENAME = None
+        self.WAVE_OUTPUT_FILEPATH = None
+
         self.initUI()
 
     def initUI(self):
@@ -116,29 +123,71 @@ class Window(QWidget):
         self.secondsub_Layout.addRow(self.recordingLbl,self.loadingLbl)
         self.secondsub_Frame.setContentsMargins(self.width/2-self.recordingLbl.width(),0,0,0)
 
+        #Settings Layout
+        self.settings_Frame = QtWidgets.QFrame(self.main_frame)
+        self.main_layout.addWidget(self.settings_Frame)
+        self.settings_Layout = QtWidgets.QGridLayout(self.settings_Frame)
+        self.settings_Frame.setFixedWidth(self.width)
+        self.settings_Frame.setFixedHeight(35)
+
         # the third sub window
         self.thirdsub_Frame = QtWidgets.QFrame(self.main_frame)
         self.main_layout.addWidget(self.thirdsub_Frame)
         self.thirdsub_Layout = QtWidgets.QGridLayout(self.thirdsub_Frame)
-        self.thirdsub_Frame.setFixedWidth(self.width)
-        self.thirdsub_Frame.setFixedHeight(self.height/3)
+        self.thirdsub_Frame.setFixedWidth(self.width-25)
+        self.thirdsub_Frame.setFixedHeight(self.height/1.8)
 
         # the 4rth sub window
         self.fourthsub_Frame = QtWidgets.QFrame(self.main_frame)
         self.main_layout.addWidget(self.fourthsub_Frame)
         self.fourthsub_Layout = QtWidgets.QFormLayout(self.fourthsub_Frame)
         self.fourthsub_Frame.setFixedWidth(self.width)
-        self.fourthsub_Frame.setFixedHeight(self.height / 3)
+        self.fourthsub_Frame.setFixedHeight(self.height / 1.8)
 
         # assign functions to buttons
         self.startRecordBtn.clicked.connect(lambda: self.startRecord())
         self.stopRecordBtn.clicked.connect(lambda: self.stopRecord())
 
+        self.comboBoxCoef = QtWidgets.QComboBox(self)
+        for i in range(12,226):
+            self.comboBoxCoef.addItem(str(i))
+
+        self.comboBoxCoef.setFixedWidth(150)
+        self.comboBoxCoef.activated[str].connect(self.onActivated)
+
+        self.comboBoxCoefLbl = QtWidgets.QLabel('Coefficients')
+        self.comboBoxCoefLbl.setFixedWidth(75)
+        self.comboBoxCoefLbl.setFixedHeight(25)
+        self.comboBoxCoef.setFixedWidth(50)
+        self.comboBoxCoef.setFixedHeight(25)
+        self.settings_Layout.addWidget(self.comboBoxCoefLbl,1,1)
+        self.settings_Layout.addWidget(self.comboBoxCoef,1,2)
+        self.settings_Frame.setContentsMargins(self.width,0,0,0)
+        self.settings_Frame.setVisible(False)
+        self.processGraphsBtn = QtWidgets.QPushButton("Process", self)
+        self.processGraphsBtn.setFixedWidth(75)
+        self.processGraphsBtn.setFixedHeight(25)
+        self.processGraphsBtn.clicked.connect(lambda: self.dataProcessing())
+        self.settings_Layout.setAlignment(Qt.AlignCenter)
+        self.settings_Layout.addWidget(self.processGraphsBtn,1,3)
+
+
+
         #show the window
         self.show()
 
+    def onActivated(self, text):
+        self.NUMCEP = int(text)
+
+    def initSettings(self):
+        self.clearGraph(3)
+        self.clearGraph(4)
+        self.settings_Frame.setVisible(False)
+        self.NUMCEP = 12
+
     #Opening file browser to import the Wav file.
     def openFile(self,form ):
+        self.initSettings()
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(None, "File Browser", "", "Wav Files (*.wav)", options=options)
@@ -147,13 +196,15 @@ class Window(QWidget):
         if len(word) != 0:
             if word.endswith('.wav'):
                 self.fileBrowserTxt.setText(''+word)
-                self.browseFilePat = fileName
-                self.showWavPlot(fileName)
+                self.WAVE_OUTPUT_FILENAME = word
+                self.WAVE_OUTPUT_FILEPATH = fileName
+                self.settings_Frame.setVisible(True)
             else:
                 QMessageBox.about(form, "Error", "Wrong File Type , Please Use Only Wav Files")
 
     #Recording voice using microphone
     def startRecord(self):
+        self.initSettings()
         self.startRec = True
         self.pyrecorded = pyaudio.PyAudio()
         self.stream = self.pyrecorded.open(format=self.FORMAT,
@@ -172,6 +223,7 @@ class Window(QWidget):
         self.frames = []
         self.recThread = threading.Thread(target = self.inputData)
         self.recThread.start()
+
 
     #getting stream of data from the microphone
     def inputData(self):
@@ -204,63 +256,68 @@ class Window(QWidget):
         self.stream.stop_stream()
         self.stream.close()
         self.pyrecorded.terminate()
-        WAVE_OUTPUT_FILENAME = time.strftime("%Y%m%d-%H%M%S")
-        WAVE_OUTPUT_FILENAME = WAVE_OUTPUT_FILENAME + ".wav"
+        self.WAVE_OUTPUT_FILENAME = time.strftime("%Y%m%d-%H%M%S")
+        self.WAVE_OUTPUT_FILENAME = self.WAVE_OUTPUT_FILENAME + ".wav"
         path = os.path.dirname(os.path.realpath(__file__))
         if not os.path.exists(path+"\\Records"):
             os.mkdir("Records")
-        wf = wave.open("Records\\"+WAVE_OUTPUT_FILENAME, 'wb')
+        wf = wave.open("Records\\"+self.WAVE_OUTPUT_FILENAME, 'wb')
         wf.setnchannels(self.CHANNELS)
         wf.setsampwidth(self.pyrecorded.get_sample_size(self.FORMAT))
         wf.setframerate(self.RATE)
         wf.writeframes(b''.join(self.frames))
         wf.close()
-        self.fileBrowserTxt.setText(WAVE_OUTPUT_FILENAME)
-        self.showWavPlot(os.path.dirname(os.path.realpath(__file__)) + "\\Records\\" + WAVE_OUTPUT_FILENAME)
+        self.fileBrowserTxt.setText(self.WAVE_OUTPUT_FILENAME)
+        self.WAVE_OUTPUT_FILEPATH=os.path.dirname(os.path.realpath(__file__)) + "\\Records\\" + self.WAVE_OUTPUT_FILENAME
+        self.settings_Frame.setVisible(True)
+
+    def dataProcessing(self):
+
+        #getting coefficients number
+        self.showSoundWav()
+        self.showMfcc()
+       #self.settings_Frame.setVisible(False)
+
 
     #clearing all the layouts fields
-    def clearGraph(self):
-        while self.thirdsub_Layout.count():
-            child = self.thirdsub_Layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-        while self.fourthsub_Layout.count():
-            child = self.fourthsub_Layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
+    def clearGraph(self,layoutnum):
+        if layoutnum == 3:
+            while self.thirdsub_Layout.count():
+                child = self.thirdsub_Layout.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
+        if layoutnum == 4:
+            while self.fourthsub_Layout.count():
+                child = self.fourthsub_Layout.takeAt(0)
+                if child.widget():
+                    child.widget().deleteLater()
 
-    #drawing graphs for the wav file
-    def showWavPlot(self, WAVE_OUTPUT_PATH ):
-        #clear the previues graphs
-        self.clearGraph()
+
+    #plotting sound wav
+    def showSoundWav(self ):
+
+        #clear the graph
+        self.clearGraph(3)
         # Sound figure
-        # a figure instance to plot on
-        self.figure = plt.figure()
-
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to __init__
-        self.canvas = FigureCanvas(self.figure)
-
-        # this is the Navigation widget
-        # it takes the Canvas widget and a parent
-        self.toolbar = NavigationToolbar(self.canvas, self)
-        #self.secondsub_Layout.addWidget(self.toolbar)
-        self.thirdsub_Layout.addWidget(self.canvas,1,1)
-
-        # create an axis
-        ax = self.figure.add_subplot(111)
         # plot data
-        spf = wave.open(WAVE_OUTPUT_PATH, 'r')
+        spf = wave.open(self.WAVE_OUTPUT_FILEPATH, 'r')
         signal = spf.readframes(-1)
         signal = np.fromstring(signal, 'Int16')
-        ax.plot(signal, '*-')
-        # refresh canvas
-        self.canvas.draw()
+        # a figure instance to plot on
+        self.figureSoundWav = pyqtgraph.PlotWidget()
+        self.thirdsub_Layout.addWidget(self.figureSoundWav,2,1)
+        self.figureSoundWav.setYRange(-35000,35000)
+        self.figureSoundWav.setTitle('Wav - '+self.WAVE_OUTPUT_FILENAME)
+        self.figureSoundWav.setLabel('left','Amplitude (db)')
+        self.figureSoundWav.setLabel('bottom', 'Frame')
+        self.figureSoundWav.plot(signal)
 
-        #drawing mfcc graph
-        (rate, sig) = wav.read(WAVE_OUTPUT_PATH)
-        mfcc_feat = mfcc(sig, rate)
-        mfcc_data = np.swapaxes(mfcc_feat, 0, 1)
+    def showMfcc(self):
+        # clear the graph
+        self.clearGraph(4)
+        #mfcc graph
+        (rate, sig) = wav.read(self.WAVE_OUTPUT_FILEPATH)
+        mfcc_feat = mfcc(sig, rate,winstep=0.0025,numcep=self.NUMCEP,nfilt=self.NUMCEP)
 
         # Sound figure
         # a figure instance to plot on
@@ -272,22 +329,19 @@ class Window(QWidget):
 
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
-        self.mfcctoolbar = NavigationToolbar(self.mfcccanvas, self)
-        #self.thirdsub_Layout.addWidget(self.mfcctoolbar)
-        self.thirdsub_Layout.addWidget(self.mfcccanvas,1,2)
+        self.thirdsub_Layout.addWidget(self.mfcccanvas,2,2)
 
         # create an axis
         ax = self.mfccfigure.add_subplot(111)
-        word = WAVE_OUTPUT_PATH.split('/')
-        if len(word) == 1:
-            word = WAVE_OUTPUT_PATH.split('\\')
+        ax.set_ylabel('MFCC values')
+        ax.set_xlabel('MFC Coefficients')
 
-        word = word[len(word) - 1]
-        ax.set_title('MFCC - '+word)
-        #ax.plot(mfcc_feat,'*-')
-        ax.imshow(mfcc_data, interpolation='nearest', origin='lower', aspect='auto')
 
-        self.mfcccanvas.draw()
+        ax.set_title('MFCC - '+self.WAVE_OUTPUT_FILENAME)
+
+        ax.imshow(mfcc_feat, interpolation='nearest', origin='lower', aspect='auto')
+
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
