@@ -85,8 +85,8 @@ class CNN():
                 self.label[i] = True
             else:
                 self.label[i] = False
-
     # load csv files into arrays
+
     def load_data(self):
         # shuffle the data
         filenames = os.listdir("db\\MFCC\\")
