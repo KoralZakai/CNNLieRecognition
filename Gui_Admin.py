@@ -1,6 +1,10 @@
 import sys
 import ctypes
-from PyQt5.QtWidgets import QApplication, QWidget
+from threading import Thread
+from tkinter import *
+from tkinter import filedialog
+
+from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import Qt, QThread
 from PyQt5 import QtCore
@@ -24,7 +28,7 @@ class Feature():
 
 
 class Gui_Admin(QWidget):
-
+    showMessageBox = QtCore.pyqtSignal(str)
     def __init__(self):
         super().__init__()
         super(Gui_Admin, self).__init__()
@@ -41,6 +45,7 @@ class Gui_Admin(QWidget):
         self.top = 0
         self._initModelDefaultParams()
         self._initUI()
+        self.showMessageBox.connect(self.on_show_message_box)
 
     def _initModelDefaultParams(self):
         self.defaultDict = {'Batch size': 20, 'Learning Rate': 0.01, 'Epoch Number': 1, 'Column Number': 32}
@@ -48,6 +53,7 @@ class Gui_Admin(QWidget):
         self.train_percent = 0.9
 
     def _initUI(self):
+
         self.setWindowTitle(self.title)
         self.setGeometry(0, 0, self.width, self.height-60)
         # Setting up the form fields
@@ -56,6 +62,7 @@ class Gui_Admin(QWidget):
         main_frame.setStyleSheet("background-color:green;margin:0 auto")
         main_layout = QtWidgets.QVBoxLayout(main_frame)
         main_frame.setFixedSize(self.width, self.height-100)
+        main_layout.setAlignment(Qt.AlignTop)
 
         form_frame = QtWidgets.QFrame(main_frame)
         form_frame.setStyleSheet("background-color:red;")
@@ -69,10 +76,18 @@ class Gui_Admin(QWidget):
         self.graph_layout = QtWidgets.QHBoxLayout(self.graph_frame)
         main_layout.addWidget(self.graph_frame)
 
+
         self.graph_arr = []
         for i in range(4):
             self.graph_arr.append(pg.PlotWidget())
+            self.graph_arr[i].showGrid(x=True,y=True)
+            self.graph_arr[i].getAxis('bottom').enableAutoSIPrefix(False)
+            self.graph_arr[i].getAxis('left').enableAutoSIPrefix(False)
             self.graph_layout.addWidget(self.graph_arr[i])
+            if i in [Graph.ACC_BATCH, Graph.ACC_EPOCH]:
+                self.graph_arr[i].setYRange(0,1)
+            else:
+                self.graph_arr[i].setYRange(0, 5)
 
         formTitleLbl = QtWidgets.QLabel('Admin Management Settings')
         form_layout.addWidget(formTitleLbl, 1, 1)
@@ -110,6 +125,7 @@ class Gui_Admin(QWidget):
         self.btnStartLearnPhase.clicked.connect(lambda: self.learnPhase())
 
         self.show()
+
 
     def _initSlider(self):
         train_percentLbl = QtWidgets.QLabel('Training percent =  50%')
@@ -156,8 +172,8 @@ class Gui_Admin(QWidget):
                                      optimizer=self.comboText,
                                      learn_rate=learning_rate)
 
-                self.pool = ThreadPool(processes=1)
-                self.pool.apply_async(task1, args=(self.CNN_model,))
+                self.CNNThread = CNNThreadWork(self,self.CNN_model)
+                self.CNNThread.run()
             else:
                 self.pool.terminate()
                 self.pool.join()
@@ -165,14 +181,49 @@ class Gui_Admin(QWidget):
         except Exception as e:
             print(e)
 
+    def on_show_message_box(self, res):
+        if res=='Finished':
+            buttonReply = QMessageBox.question(self, 'System message', "Do you want to save model?",
+                                       QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if buttonReply == QMessageBox.Yes:
+            self.file_save()
 
-def task1(*args):
-    CNN_model=args[0]
-    print("-----------------creating dataset-----------------")
-    CNN_model.createDataSet()
-    print("-----------------train model----------------")
-    CNN_model.trainModel()
-    print(CNN.predict(None))
+    def file_save(self):
+        """get a filename and save the text in the editor widget"""
+        path, _ = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
+        self.CNN_model.saveModel(path)
+    '''
+    def task1(*args):
+        self.app.showMessageBox.emit(thread_name,
+                                     'finished',
+                                     'Hello',
+                                     'Thread {} sent this message.'.format(thread_name))
+        CNN_model=args[0]
+        print("-----------------creating dataset-----------------")
+        CNN_model.createDataSet()
+        print("-----------------train model----------------")
+        CNN_model.trainModel()
+    
+    
+        print(CNN.predict(None))
+    '''
+
+class CNNThreadWork(Thread):
+    def __init__(self,app,CNN):
+        super(CNNThreadWork).__init__()
+        self.app = app
+        self.CNN_model = CNN
+
+    def run(self):
+
+        print("-----------------creating dataset-----------------")
+        self.CNN_model.createDataSet()
+        print("-----------------train model----------------")
+        self.CNN_model.trainModel()
+        self.app.showMessageBox.emit('Finished')
+
+
+
 
 
 # define functionality inside class
@@ -181,24 +232,44 @@ class AccuracyHistory(Callback):
     def __init__(self, graph, frame):
         self.graph_arr = graph
         frame.setVisible(True)
+        self.index_on_epoch = self.index_on_batch = 0
+        self.index_log_on_batch = []
+        self.index_log_on_epoch = []
+        for lbl in [Graph.ACC_EPOCH,Graph.ACC_BATCH]:
+            self.graph_arr[lbl].setLabel('bottom', 'Epoch number', units='times')
+            self.graph_arr[lbl].setLabel('left', 'Accuracy', units='%')
+        for lbl in [Graph.LOSS_BATCH,Graph.LOSS_EPOCH]:
+            self.graph_arr[lbl].setLabel('left', 'Loss value', units='%')
+            self.graph_arr[lbl].setLabel('bottom', 'Epoch number', units='times')
 
 
     def on_train_begin(self, logs={}):
         self.logs = [[], [], [], []]
 
+
+    def on_epoch_begin(self, epoch, logs=None):
+        self.index_log_on_batch = []
+        self.index_on_batch = 1
+        self.logs[Graph.ACC_BATCH] = []
+        self.logs[Graph.LOSS_BATCH] = []
+
     def on_epoch_end(self, batch, logs={}):
+        self.index_on_epoch +=1
+        self.index_log_on_epoch.append(self.index_on_epoch)
         self.logs[Graph.ACC_EPOCH].append(logs.get('acc'))
         self.logs[Graph.LOSS_EPOCH].append(logs.get('loss'))
-        thread_acc = PlotLogs(self.graph_arr[Graph.ACC_EPOCH],self.logs[Graph.ACC_EPOCH])
-        thread_loss = PlotLogs(self.graph_arr[Graph.LOSS_EPOCH], self.logs[Graph.LOSS_EPOCH])
+        thread_acc = PlotLogs(self.graph_arr[Graph.ACC_EPOCH],self.logs[Graph.ACC_EPOCH],self.index_log_on_epoch)
+        thread_loss = PlotLogs(self.graph_arr[Graph.LOSS_EPOCH], self.logs[Graph.LOSS_EPOCH],self.index_log_on_epoch)
         thread_acc.start()
         thread_loss.start()
 
     def on_batch_end(self, batch, logs=None):
+        self.index_on_batch += 1
+        self.index_log_on_batch.append(self.index_on_batch)
         self.logs[Graph.ACC_BATCH].append(logs.get('acc'))
         self.logs[Graph.LOSS_BATCH].append(logs.get('loss'))
-        thread_acc = PlotLogs(self.graph_arr[Graph.ACC_BATCH], self.logs[Graph.ACC_BATCH])
-        thread_loss = PlotLogs(self.graph_arr[Graph.LOSS_BATCH], self.logs[Graph.LOSS_BATCH])
+        thread_acc = PlotLogs(self.graph_arr[Graph.ACC_BATCH], self.logs[Graph.ACC_BATCH], self.index_log_on_batch)
+        thread_loss = PlotLogs(self.graph_arr[Graph.LOSS_BATCH], self.logs[Graph.LOSS_BATCH], self.index_log_on_batch)
         thread_acc.start()
         thread_loss.start()
 
@@ -208,24 +279,15 @@ class AccuracyHistory(Callback):
 
         except Exception as e: print(e)
 
-    def clearGraph(self):
-        while self.layout.count():
-            child = self.layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-        while self.layout.count():
-            child = self.layout.takeAt(0)
-            if child.widget():
-                child.widget().deleteLater()
-
-class PlotLogs(QThread):
-    def __init__(self, graph, data):
+class PlotLogs(Thread):
+    def __init__(self, graph, data,index):
         super().__init__()
         self.graph = graph
         self.data = data
+        self.index = index
 
     def run(self):
-        self.graph.plot(self.data)
+        self.graph.plot(self.index, self.data, pen='r', symbolBrush=0.3, name='blue')
 
 
 if __name__ == '__main__':
