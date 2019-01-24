@@ -19,7 +19,7 @@ def displayLearning(history):
     plt.legend(['Train', 'Test'], loc='upper left')
     plt.show()
 
-
+ 
 
 
 for lr in [0.001]:
