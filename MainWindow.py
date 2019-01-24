@@ -28,7 +28,7 @@ class App(QWidget):
         txt = QtWidgets.QLineEdit()
         lbl.setAlignment(Qt.AlignCenter)
         btn = QtWidgets.QPushButton("Browse", self
-        horizontal = QtWidgets.Ho
+        #horizontal = QtWidgets.Ho
         form.addRow(lbl,txt,btn)
         #lbl = QtWidgets.QLabel("Pick audio file:",self)
         #grid.addWidget(lbl, 3, 3)

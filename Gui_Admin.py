@@ -1,24 +1,16 @@
-import sys
 import ctypes
-from threading import Thread
 from tkinter import *
-from tkinter import filedialog
 
 from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtCore import Qt, QThread
+from PyQt5.QtCore import Qt
 from PyQt5 import QtCore
-from CNN import CNN as CNN
-from keras.callbacks import Callback
-from multiprocessing.pool import ThreadPool
+from ModelTrainingUtils.CNN import CNN as CNN
 import pyqtgraph as pg
-import numpy as np
 
-class Graph():
-    ACC_EPOCH  = 0
-    LOSS_EPOCH = 1
-    ACC_BATCH  = 2
-    LOSS_BATCH = 3
+from ModelTrainingUtils.AccuracyHistory import AccuracyHistory, Graph
+from ModelTrainingUtils.CNNThreadWork import CNNThreadWork
+
 
 class Feature():
     BATCH_SIZE = 0
@@ -163,7 +155,8 @@ class Gui_Admin(QWidget):
                 learning_rate = float(self.arrTxt[Feature.LEARN_RATE].toPlainText())
                 epoch_nbr = int(self.arrTxt[Feature.EPOCH_NBR].toPlainText())
                 feature_nbr = int(self.arrTxt[Feature.FEATURE_NBR].toPlainText())
-                displayGraph = AccuracyHistory(self.graph_arr,self.graph_frame)
+                self.init_graph_by_params(epoch_nbr)
+                displayGraph = AccuracyHistory(self.graph_arr,self.graph_frame,epoch_nbr)
                 self.CNN_model = CNN(calbackFunc=displayGraph,
                                      batch_size=batch_size,
                                      train_perc=self.train_percent,
@@ -173,121 +166,37 @@ class Gui_Admin(QWidget):
                                      learn_rate=learning_rate)
 
                 self.CNNThread = CNNThreadWork(self,self.CNN_model)
-                self.CNNThread.run()
+                self.CNNThread.start()
             else:
-                self.pool.terminate()
-                self.pool.join()
+                self.CNNThread.terminate()
                 self.btnStartLearnPhase.setText("Start")
         except Exception as e:
             print(e)
 
-    def on_show_message_box(self, res):
-        if res=='Finished':
-            buttonReply = QMessageBox.question(self, 'System message', "Do you want to save model?",
-                                       QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-        if buttonReply == QMessageBox.Yes:
-            self.file_save()
-
-    def file_save(self):
-        """get a filename and save the text in the editor widget"""
-        path, _ = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
-        self.CNN_model.saveModel(path)
-    '''
-    def task1(*args):
-        self.app.showMessageBox.emit(thread_name,
-                                     'finished',
-                                     'Hello',
-                                     'Thread {} sent this message.'.format(thread_name))
-        CNN_model=args[0]
-        print("-----------------creating dataset-----------------")
-        CNN_model.createDataSet()
-        print("-----------------train model----------------")
-        CNN_model.trainModel()
-    
-    
-        print(CNN.predict(None))
-    '''
-
-class CNNThreadWork(Thread):
-    def __init__(self,app,CNN):
-        super(CNNThreadWork).__init__()
-        self.app = app
-        self.CNN_model = CNN
-
-    def run(self):
-
-        print("-----------------creating dataset-----------------")
-        self.CNN_model.createDataSet()
-        print("-----------------train model----------------")
-        self.CNN_model.trainModel()
-        self.app.showMessageBox.emit('Finished')
-
-
-
-
-
-# define functionality inside class
-class AccuracyHistory(Callback):
-
-    def __init__(self, graph, frame):
-        self.graph_arr = graph
-        frame.setVisible(True)
-        self.index_on_epoch = self.index_on_batch = 0
-        self.index_log_on_batch = []
-        self.index_log_on_epoch = []
-        for lbl in [Graph.ACC_EPOCH,Graph.ACC_BATCH]:
+    def init_graph_by_params(self,epoch_nbr):
+        self.graph_arr[Graph.LOSS_EPOCH].setXRange(1,epoch_nbr)
+        self.graph_arr[Graph.ACC_BATCH].setXRange(1,epoch_nbr)
+        for lbl in [Graph.ACC_EPOCH, Graph.ACC_BATCH]:
             self.graph_arr[lbl].setLabel('bottom', 'Epoch number', units='times')
             self.graph_arr[lbl].setLabel('left', 'Accuracy', units='%')
-        for lbl in [Graph.LOSS_BATCH,Graph.LOSS_EPOCH]:
+        for lbl in [Graph.LOSS_BATCH, Graph.LOSS_EPOCH]:
             self.graph_arr[lbl].setLabel('left', 'Loss value', units='%')
             self.graph_arr[lbl].setLabel('bottom', 'Epoch number', units='times')
 
+    def on_show_message_box(self, res):
+        if res == 'Finished':
+            buttonReply = QMessageBox.question(self, 'System message', "Do you want to save model?",
+                                       QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+        if buttonReply == QMessageBox.Yes:
+            path = self.file_save()
+            QMessageBox.information(self, "Success", "The file has been saved to:\r\n {}.h5".format(path))
+            return
+        QMessageBox.information(self, "Cancel", "The file was not saved")
 
-    def on_train_begin(self, logs={}):
-        self.logs = [[], [], [], []]
-
-
-    def on_epoch_begin(self, epoch, logs=None):
-        self.index_log_on_batch = []
-        self.index_on_batch = 1
-        self.logs[Graph.ACC_BATCH] = []
-        self.logs[Graph.LOSS_BATCH] = []
-
-    def on_epoch_end(self, batch, logs={}):
-        self.index_on_epoch +=1
-        self.index_log_on_epoch.append(self.index_on_epoch)
-        self.logs[Graph.ACC_EPOCH].append(logs.get('acc'))
-        self.logs[Graph.LOSS_EPOCH].append(logs.get('loss'))
-        thread_acc = PlotLogs(self.graph_arr[Graph.ACC_EPOCH],self.logs[Graph.ACC_EPOCH],self.index_log_on_epoch)
-        thread_loss = PlotLogs(self.graph_arr[Graph.LOSS_EPOCH], self.logs[Graph.LOSS_EPOCH],self.index_log_on_epoch)
-        thread_acc.start()
-        thread_loss.start()
-
-    def on_batch_end(self, batch, logs=None):
-        self.index_on_batch += 1
-        self.index_log_on_batch.append(self.index_on_batch)
-        self.logs[Graph.ACC_BATCH].append(logs.get('acc'))
-        self.logs[Graph.LOSS_BATCH].append(logs.get('loss'))
-        thread_acc = PlotLogs(self.graph_arr[Graph.ACC_BATCH], self.logs[Graph.ACC_BATCH], self.index_log_on_batch)
-        thread_loss = PlotLogs(self.graph_arr[Graph.LOSS_BATCH], self.logs[Graph.LOSS_BATCH], self.index_log_on_batch)
-        thread_acc.start()
-        thread_loss.start()
-
-    def plot(self, data):
-        try:
-            self.graph_acc.plot(self.loss)
-
-        except Exception as e: print(e)
-
-class PlotLogs(Thread):
-    def __init__(self, graph, data,index):
-        super().__init__()
-        self.graph = graph
-        self.data = data
-        self.index = index
-
-    def run(self):
-        self.graph.plot(self.index, self.data, pen='r', symbolBrush=0.3, name='blue')
+    def file_save(self):
+        path, _ = QtGui.QFileDialog.getSaveFileName(self, 'Save File')
+        self.CNN_model.saveModel(path)
+        return path
 
 
 if __name__ == '__main__':
