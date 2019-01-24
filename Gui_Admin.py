@@ -1,19 +1,20 @@
 import sys
-import threading
-from enum import Enum
-from select import select
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+import ctypes
 from PyQt5.QtWidgets import QApplication, QWidget
-from PyQt5 import QtGui, QtWidgets, uic
-from PyQt5.QtCore import Qt, QThreadPool
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtCore import Qt, QThread
 from PyQt5 import QtCore
 from CNN import CNN as CNN
 from keras.callbacks import Callback
 from multiprocessing.pool import ThreadPool
-import matplotlib.pyplot as plt
 import pyqtgraph as pg
 import numpy as np
+
+class Graph():
+    ACC_EPOCH  = 0
+    LOSS_EPOCH = 1
+    ACC_BATCH  = 2
+    LOSS_BATCH = 3
 
 class Feature():
     BATCH_SIZE = 0
@@ -22,16 +23,22 @@ class Feature():
     FEATURE_NBR = 3
 
 
-class App(QWidget):
+class Gui_Admin(QWidget):
 
     def __init__(self):
         super().__init__()
+        super(Gui_Admin, self).__init__()
+        user32 = ctypes.windll.user32
+        user32.SetProcessDPIAware()
+        [w, h] = [user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)]
+        # init the initial parameters of this GUI
+        self.title = 'Lie Detection'
+        self.width = w
+        self.height = h
         self.CNN = None
         self.title = 'Lie Detection - Admin'
-        self.left = 100
-        self.top = 100
-        self.width = 640
-        self.height = 480
+        self.left = 0
+        self.top = 0
         self._initModelDefaultParams()
         self._initUI()
 
@@ -41,29 +48,31 @@ class App(QWidget):
         self.train_percent = 0.9
 
     def _initUI(self):
-        x = np.arange(1000)
-        y = np.random.normal(size=(3, 1000))
-        plotWidget = pg.plot(title="Three plot curves")
-        for i in range(3):
-            plotWidget.plot(x, y[i], pen=(i, 3))  ## setting pen=(i,3) automaticaly creates three different-colored pens
-            plotWidget.c
         self.setWindowTitle(self.title)
-        self.setGeometry(self.left, self.top, self.width, self.height)
+        self.setGeometry(0, 0, self.width, self.height-60)
         # Setting up the form fields
         self.setStyleSheet("margin:0 auto")
         main_frame = QtWidgets.QFrame(self)
         main_frame.setStyleSheet("background-color:green;margin:0 auto")
         main_layout = QtWidgets.QVBoxLayout(main_frame)
+        main_frame.setFixedSize(self.width, self.height-100)
 
         form_frame = QtWidgets.QFrame(main_frame)
         form_frame.setStyleSheet("background-color:red;")
         form_layout = QtWidgets.QGridLayout(form_frame)
+        form_frame.setFixedHeight(self.height/2)
         main_layout.addWidget(form_frame)
 
-        graph_frame = QtWidgets.QFrame(main_frame)
-        graph_frame.setStyleSheet("background-color:blue")
-        self.graph_layout = QtWidgets.QHBoxLayout(graph_frame)
-        main_layout.addWidget(graph_frame)
+        self.graph_frame = QtWidgets.QFrame(main_frame)
+        self.graph_frame.setStyleSheet("background-color:blue")
+        self.graph_frame.setVisible(False)
+        self.graph_layout = QtWidgets.QHBoxLayout(self.graph_frame)
+        main_layout.addWidget(self.graph_frame)
+
+        self.graph_arr = []
+        for i in range(4):
+            self.graph_arr.append(pg.PlotWidget())
+            self.graph_layout.addWidget(self.graph_arr[i])
 
         formTitleLbl = QtWidgets.QLabel('Admin Management Settings')
         form_layout.addWidget(formTitleLbl, 1, 1)
@@ -138,7 +147,7 @@ class App(QWidget):
                 learning_rate = float(self.arrTxt[Feature.LEARN_RATE].toPlainText())
                 epoch_nbr = int(self.arrTxt[Feature.EPOCH_NBR].toPlainText())
                 feature_nbr = int(self.arrTxt[Feature.FEATURE_NBR].toPlainText())
-                displayGraph = AccuracyHistory(self.graph_layout)
+                displayGraph = AccuracyHistory(self.graph_arr,self.graph_frame)
                 self.CNN_model = CNN(calbackFunc=displayGraph,
                                      batch_size=batch_size,
                                      train_perc=self.train_percent,
@@ -150,8 +159,6 @@ class App(QWidget):
                 self.pool = ThreadPool(processes=1)
                 self.pool.apply_async(task1, args=(self.CNN_model,))
             else:
-                # self.AsyncTask.stop()
-                # self.AsyncTask = None
                 self.pool.terminate()
                 self.pool.join()
                 self.btnStartLearnPhase.setText("Start")
@@ -171,51 +178,34 @@ def task1(*args):
 # define functionality inside class
 class AccuracyHistory(Callback):
 
-    def __init__(self,graph_layout):
-        self.layout = graph_layout
+    def __init__(self, graph, frame):
+        self.graph_arr = graph
+        frame.setVisible(True)
 
 
     def on_train_begin(self, logs={}):
-        self.acc = []
-        self.loss = []
+        self.logs = [[], [], [], []]
 
     def on_epoch_end(self, batch, logs={}):
-        self.acc.append(logs.get('acc'))
-        self.loss.append(logs.get('loss'))
-        self.plot(self.acc)
+        self.logs[Graph.ACC_EPOCH].append(logs.get('acc'))
+        self.logs[Graph.LOSS_EPOCH].append(logs.get('loss'))
+        thread_acc = PlotLogs(self.graph_arr[Graph.ACC_EPOCH],self.logs[Graph.ACC_EPOCH])
+        thread_loss = PlotLogs(self.graph_arr[Graph.LOSS_EPOCH], self.logs[Graph.LOSS_EPOCH])
+        thread_acc.start()
+        thread_loss.start()
+
+    def on_batch_end(self, batch, logs=None):
+        self.logs[Graph.ACC_BATCH].append(logs.get('acc'))
+        self.logs[Graph.LOSS_BATCH].append(logs.get('loss'))
+        thread_acc = PlotLogs(self.graph_arr[Graph.ACC_BATCH], self.logs[Graph.ACC_BATCH])
+        thread_loss = PlotLogs(self.graph_arr[Graph.LOSS_BATCH], self.logs[Graph.LOSS_BATCH])
+        thread_acc.start()
+        thread_loss.start()
 
     def plot(self, data):
         try:
+            self.graph_acc.plot(self.loss)
 
-            x = [1,5,9,2,3,1]
-            y = [1,2,3,4,5,6]
-            win2 = pg.GraphicsWindow()
-            win2.resize(1000, 600)
-            win2.setWindowTitle('pyqtgraph example: Plotting')
-            p2 = win2.addPlot(title="Updating plot")
-            curve = p2.plot(pen='y')
-            # clear the previues graphs
-            self.clearGraph()
-            # Sound figure
-            # a figure instance to plot on
-            #self.figure = plt.figure()
-
-            # this is the Canvas Widget that displays the `figure`
-            # it takes the `figure` instance as a parameter to __init__
-            #self.canvas = FigureCanvas(self.figure)
-
-            # this is the Navigation widget
-            # it takes the Canvas widget and a parent
-            #self.toolbar = NavigationToolbar(self.canvas, self)
-            #self.layout.addWidget(self.toolbar)
-            #self.layout.addWidget(self.figure.canvas)
-
-            # create an axis
-            #ax = self.figure.add_subplot(111)
-            # plot data
-           #ax.plot(data, '*-')
-            ## refresh canvas
-           # self.canvas.draw()
         except Exception as e: print(e)
 
     def clearGraph(self):
@@ -228,8 +218,17 @@ class AccuracyHistory(Callback):
             if child.widget():
                 child.widget().deleteLater()
 
+class PlotLogs(QThread):
+    def __init__(self, graph, data):
+        super().__init__()
+        self.graph = graph
+        self.data = data
+
+    def run(self):
+        self.graph.plot(self.data)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    ex = App()
+    ex = Gui_Admin()
     sys.exit(app.exec_())
