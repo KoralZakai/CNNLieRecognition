@@ -28,9 +28,11 @@ class CNN():
     # learn_rate - controls how much we are adjusting the weights of our network
     # optimizer - optimizer for model could be one of ('sgd','adam','rmsprop')
     # column_nbr - number of columns in the input data minimum 32
-    def __init__(self, calbackFunc, batch_size=10, train_perc=0.8, epoch_nbr=10, learn_rate=0.001, optimizer='adam', column_nbr=32):
+    def __init__(self,model=None, calbackFunc=None, batch_size=10, train_perc=0.8, epoch_nbr=10, learn_rate=0.001, optimizer='adam', column_nbr=32):
         super().__init__()
-
+        if model != None:
+            self.loadModel(model)
+            return
         self.historyCallBackFunction = calbackFunc
         self._setOptimizer(optimizer, learn_rate)
         self.epoch_nbr = epoch_nbr
@@ -129,6 +131,7 @@ class CNN():
 
     def loadModel(self, fileName):
         self.model = load_model('{}.h5'.format(fileName))
+
 
     def predict(self, input):
         input = np.zeros((1,self.line_nbr, self.column_nbr, 3), dtype=float)
