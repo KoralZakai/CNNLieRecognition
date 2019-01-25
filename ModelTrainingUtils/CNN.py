@@ -14,6 +14,9 @@ import tensorflow as tf
 from keras import backend as K
 from keras.models import load_model
 from PyQt5 import QtCore
+
+from ModelTrainingUtils.AccuracyHistory import AccuracyHistory
+
 CLASSES_NBR = 2
 VERBOSE = 1
 HIDDEN_NBR = 1000
@@ -28,12 +31,12 @@ class CNN():
     # learn_rate - controls how much we are adjusting the weights of our network
     # optimizer - optimizer for model could be one of ('sgd','adam','rmsprop')
     # column_nbr - number of columns in the input data minimum 32
-    def __init__(self,model=None, calbackFunc=None, batch_size=10, train_perc=0.8, epoch_nbr=10, learn_rate=0.001, optimizer='adam', column_nbr=32):
+    def __init__(self,model=None, batch_size=10, train_perc=0.8, epoch_nbr=10, learn_rate=0.001, optimizer='adam', column_nbr=32):
         super().__init__()
+        self.line_nbr = 225
         if model != None:
             self.loadModel(model)
             return
-        self.historyCallBackFunction = calbackFunc
         self._setOptimizer(optimizer, learn_rate)
         self.epoch_nbr = epoch_nbr
         self.batch_size = batch_size
@@ -41,7 +44,6 @@ class CNN():
         self.dictionary = {"W": "Anger", "L": "Boredom", "E": "Disgust", "A": "Fear", "F": "Happiness", "T": "Sadness",
                            "N": "Neutral"}
         self.column_nbr = column_nbr
-        self.line_nbr = 225
 
         self.session = tf.Session()
         K.set_session(self.session)
@@ -130,13 +132,17 @@ class CNN():
         self.model.save('{}.h5'.format(fileName))  # creates a HDF5 file 'my_model.h5'
 
     def loadModel(self, fileName):
-        self.model = load_model('{}.h5'.format(fileName))
+        self.model = load_model('{}'.format(fileName))
+        #getting the model filter numbers
+        thirdDimension = self.model.input.shape[2]
+        self.column_nbr = thirdDimension.__int__()
 
 
     def predict(self, input):
+        #self.line_nbr=input.shape[0]
         input = np.zeros((1,self.line_nbr, self.column_nbr, 3), dtype=float)
-        input[0] =self.data[0]
         res =self.model.predict(input, verbose=1)
+
         return float(res[0][0]), float(res[0][1])
 
     def trainModel(self):
@@ -182,7 +188,7 @@ class CNN():
                                                   embeddings_metadata=None,
                                                   embeddings_data=None,
                                                   update_freq='epoch')
-        return [tensorBoard, earlyStop, self.historyCallBackFunction]
+        return [tensorBoard, earlyStop, AccuracyHistory]
 
 
 

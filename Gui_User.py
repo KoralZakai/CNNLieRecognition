@@ -1,11 +1,8 @@
 import ctypes
-from multiprocessing.pool import ThreadPool
-
-from matplotlib import cm
+import glob
 from python_speech_features import mfcc
 import scipy.io.wavfile as wav
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5 import QtGui, QtWidgets, uic
 import time
@@ -19,6 +16,10 @@ import numpy as np
 import os
 from PyQt5.QtCore import Qt
 import pyqtgraph
+from ModelTrainingUtils.CNN import *
+import ctypes
+from ctypes import *
+
 class Window(QWidget):
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
@@ -30,10 +31,11 @@ class Window(QWidget):
         self.width = w
         self.height = h
         self.startRec = True
+        #stream params
         self.CHUNK = 1024
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 2
-        self.NUMCEP = 13
+        self.NUMCEP = 32
         self.RATE = 44100
         self.frames = None
         self.pyrecorded = None
@@ -41,10 +43,13 @@ class Window(QWidget):
         self.recThread = None
         self.movie = None
         self.figureSoundWav = None
-        self.figureMFCC = None
+        self.mfccResult = None
         self.WAVE_OUTPUT_FILENAME = None
         self.WAVE_OUTPUT_FILEPATH = None
+        self.pickedModelPath = None
 
+        winmm = windll.winmm
+        print('waveInGetNumDevs=', winmm.waveInGetNumDevs())
         self.initUI()
 
     def initUI(self):
@@ -123,12 +128,15 @@ class Window(QWidget):
         self.secondsub_Layout.addRow(self.recordingLbl,self.loadingLbl)
         self.secondsub_Frame.setContentsMargins(self.width/2-self.recordingLbl.width(),0,0,0)
 
-        #Settings Layout
+        # Settings Layout
         self.settings_Frame = QtWidgets.QFrame(self.main_frame)
         self.main_layout.addWidget(self.settings_Frame)
-        self.settings_Layout = QtWidgets.QGridLayout(self.settings_Frame)
+        self.settings_Layout = QtWidgets.QFormLayout(self.settings_Frame)
         self.settings_Frame.setFixedWidth(self.width)
-        self.settings_Frame.setFixedHeight(35)
+        self.settings_Frame.setFixedHeight(self.height/8)
+        self.settings_Frame.setContentsMargins(self.width, 0, 0, 0)
+        self.settings_Layout.setFormAlignment(Qt.AlignCenter)
+        self.settings_Frame.setVisible(False)
 
         # the third sub window
         self.thirdsub_Frame = QtWidgets.QFrame(self.main_frame)
@@ -148,46 +156,80 @@ class Window(QWidget):
         self.startRecordBtn.clicked.connect(lambda: self.startRecord())
         self.stopRecordBtn.clicked.connect(lambda: self.stopRecord())
 
-        self.comboBoxCoef = QtWidgets.QComboBox(self)
-        for i in range(12,226):
-            self.comboBoxCoef.addItem(str(i))
+        # building the Coefficients number comboBox
+        self.buildCoefComboBox()
 
-        self.comboBoxCoef.setFixedWidth(150)
-        self.comboBoxCoef.activated[str].connect(self.onActivated)
+        # building the Model comboBox
+        self.buildModelComboBox()
 
-        self.comboBoxCoefLbl = QtWidgets.QLabel('Coefficients')
-        self.comboBoxCoefLbl.setFixedWidth(75)
-        self.comboBoxCoefLbl.setFixedHeight(25)
-        self.comboBoxCoef.setFixedWidth(50)
-        self.comboBoxCoef.setFixedHeight(25)
-        self.settings_Layout.addWidget(self.comboBoxCoefLbl,1,1)
-        self.settings_Layout.addWidget(self.comboBoxCoef,1,2)
-        self.settings_Frame.setContentsMargins(self.width,0,0,0)
-        self.settings_Frame.setVisible(False)
-        self.processGraphsBtn = QtWidgets.QPushButton("Process", self)
-        self.processGraphsBtn.setFixedWidth(75)
+        #Predict button
+        self.processGraphsBtn = QtWidgets.QPushButton("Predict", self)
+        self.processGraphsBtn.setFixedWidth(131)
         self.processGraphsBtn.setFixedHeight(25)
-        self.processGraphsBtn.clicked.connect(lambda: self.dataProcessing())
-        self.settings_Layout.setAlignment(Qt.AlignCenter)
-        self.settings_Layout.addWidget(self.processGraphsBtn,1,3)
+        self.processGraphsBtn.clicked.connect(lambda: self.dataProcessingmfcc())
+        self.settings_Layout.addRow(self.processGraphsBtn)
 
-
+        # Predict button
+        self.mfccGraphsBtn = QtWidgets.QPushButton("MFCC", self)
+        self.mfccGraphsBtn.setFixedWidth(131)
+        self.mfccGraphsBtn.setFixedHeight(25)
+        self.mfccGraphsBtn.clicked.connect(lambda: self.showMfcc())
+        self.settings_Layout.addRow(self.mfccGraphsBtn,self.processGraphsBtn)
 
         #show the window
         self.show()
 
-    def onActivated(self, text):
+    def buildCoefComboBox(self):
+        self.comboBoxCoef = QtWidgets.QComboBox(self)
+        for i in range(32, 226):
+            self.comboBoxCoef.addItem(str(i))
+        self.comboBoxCoef.activated[str].connect(self.onActivatedComboBoxCoef)
+        self.comboBoxCoefLbl = QtWidgets.QLabel('Coefficients')
+        self.comboBoxCoefLbl.setFixedWidth(75)
+        self.comboBoxCoefLbl.setFixedHeight(25)
+        self.comboBoxCoef.setFixedWidth(130)
+        self.comboBoxCoef.setFixedHeight(25)
+        self.settings_Layout.addRow(self.comboBoxCoefLbl,self.comboBoxCoef)
+
+    def buildModelComboBox(self):
+        self.comboboxModel = QtWidgets.QComboBox(self)
+        self.comboboxModel.setFixedWidth(130)
+        self.comboboxModel.setFixedHeight(25)
+        self.comboboxModel.activated[str].connect(self.onActivatedComboBoxModel)
+
+        modelPath = os.path.dirname(os.path.realpath(__file__)) + "\\Model\\"
+        first = True
+        for modelname in os.listdir(modelPath):
+            if modelname.endswith('.h5'):
+                self.comboboxModel.addItem(modelname.split('.')[0])
+                if first:
+                    self.pickedModelPath =modelPath +modelname
+                    first = False
+
+
+        self.comboBoxModelLbl = QtWidgets.QLabel('Model')
+        self.comboBoxModelLbl.setFixedWidth(75)
+        self.comboBoxModelLbl.setFixedHeight(25)
+        self.settings_Layout.addRow(self.comboBoxModelLbl,self.comboboxModel)
+
+
+    def onActivatedComboBoxCoef(self, text):
         self.NUMCEP = int(text)
+
+
+    def onActivatedComboBoxModel(self, text):
+        self.pickedModelPath = os.path.dirname(os.path.realpath(__file__)) + "\\Model\\"+text+'.h5'
 
     def initSettings(self):
         self.clearGraph(3)
         self.clearGraph(4)
         self.settings_Frame.setVisible(False)
-        self.NUMCEP = 12
+        self.NUMCEP = 32
 
     #Opening file browser to import the Wav file.
     def openFile(self,form ):
         self.initSettings()
+        print()
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
         fileName, _ = QFileDialog.getOpenFileName(None, "File Browser", "", "Wav Files (*.wav)", options=options)
@@ -198,7 +240,8 @@ class Window(QWidget):
                 self.fileBrowserTxt.setText(''+word)
                 self.WAVE_OUTPUT_FILENAME = word
                 self.WAVE_OUTPUT_FILEPATH = fileName
-                self.settings_Frame.setVisible(True)
+                self.dataProcessing()
+
             else:
                 QMessageBox.about(form, "Error", "Wrong File Type , Please Use Only Wav Files")
 
@@ -225,14 +268,14 @@ class Window(QWidget):
         self.recThread.start()
 
 
-    #getting stream of data from the microphone
+    # Input stream of data from the microphone
     def inputData(self):
         while (self.startRec):
             data = self.stream.read(self.CHUNK)
             self.frames.append(data)
         sys.exit()
 
-    #launching the waiting gif
+    # Playing the waiting GIF
     def startWaitingGif(self):
         self.movieGraphWait = QtGui.QMovie("Pictures/loading2.gif")
         loadingGraphLbl = QtWidgets.QLabel('', self)
@@ -242,45 +285,74 @@ class Window(QWidget):
         self.firstsub_Layout.addWidget(loadingGraphLbl)
         self.movieGraphWait.start()
 
-    def stopWaitingGif(self):
-    #Stopp recording voice using microphone
-        print()
-
+    # Stop record and save the stream of wav frames into wav file.
     def stopRecord(self):
+        # Stopping the recording thread
         self.startRec = False
+        # Handling all the fields visibility.
         self.loadingLbl.setVisible(False)
         self.stopRecordBtn.setVisible(False)
         self.startRecordBtn.setVisible(True)
         self.recordingLbl.setVisible(False)
-        print("* done recording")
         self.stream.stop_stream()
         self.stream.close()
         self.pyrecorded.terminate()
+        # Saving the wav file.
         self.WAVE_OUTPUT_FILENAME = time.strftime("%Y%m%d-%H%M%S")
         self.WAVE_OUTPUT_FILENAME = self.WAVE_OUTPUT_FILENAME + ".wav"
-        path = os.path.dirname(os.path.realpath(__file__))
+        path = os.path.dirname(os.path.realpath(__file__))+"\\db\\"
         if not os.path.exists(path+"\\Records"):
             os.mkdir("Records")
-        wf = wave.open("Records\\"+self.WAVE_OUTPUT_FILENAME, 'wb')
+        wf = wave.open("db\\Records\\"+self.WAVE_OUTPUT_FILENAME, 'wb')
         wf.setnchannels(self.CHANNELS)
         wf.setsampwidth(self.pyrecorded.get_sample_size(self.FORMAT))
         wf.setframerate(self.RATE)
         wf.writeframes(b''.join(self.frames))
         wf.close()
+        # Adding the file name to the file browser text field.
         self.fileBrowserTxt.setText(self.WAVE_OUTPUT_FILENAME)
-        self.WAVE_OUTPUT_FILEPATH=os.path.dirname(os.path.realpath(__file__)) + "\\Records\\" + self.WAVE_OUTPUT_FILENAME
-        self.settings_Frame.setVisible(True)
+        self.WAVE_OUTPUT_FILEPATH=os.path.dirname(os.path.realpath(__file__)) + "\\db\\Records\\" + self.WAVE_OUTPUT_FILENAME
 
+        # Processing the input file.
+        self.dataProcessing()
+
+    # Handiling the data processing.
     def dataProcessing(self):
-
-        #getting coefficients number
+        # Showing te graph's frame.
+        self.settings_Frame.setVisible(True)
+        # Drawing the sound graph / mfcc graph.
         self.showSoundWav()
         self.showMfcc()
-       #self.settings_Frame.setVisible(False)
 
+    # Processing the wav file / recorded file , drawing mfcc.
+    def dataProcessingmfcc(self):
+        # Drawing mfcc for the input file.
+        self.showMfcc()
+        # Prediction using the picked model .
+        newCNN = CNN(model=self.pickedModelPath)
+        if newCNN.column_nbr != self.NUMCEP:
+            QMessageBox.about(self, "Error", "The Coefficients Number Is Not Match ,Dont Worry, I Will Fix It For You ")
+            self.comboBoxCoef.setCurrentIndex(newCNN.column_nbr-32)
+            self.NUMCEP=int(self.comboBoxCoef.currentText())
+            self.showMfcc()
 
-    #clearing all the layouts fields
+        #modelPath = os.path.dirname(os.path.realpath(__file__)) + "\\db\\wav\\"
+        """for modelname in os.listdir(modelPath):
+            if modelname.endswith('.wav'):
+                (rate, sig) = wav.read(modelPath+modelname)
+                ress = mfcc(sig, rate,winstep=0.005,numcep=self.NUMCEP,nfilt=self.NUMCEP)
+                print("*****************************************************************************")
+                print(modelname)
+                print(newCNN.predict(ress))
+                print("*****************************************************************************\n")
+        """
+         #print(newCNN.predict(self.mfccResult))
+
+    # Clearing graphs
+    # layoutnum - the layout number that includes the wanted graph to clear.
     def clearGraph(self,layoutnum):
+        # layoutnum = 3 -> sound wave graph.
+        # layoutnum = 4 -> mfcc grap.
         if layoutnum == 3:
             while self.thirdsub_Layout.count():
                 child = self.thirdsub_Layout.takeAt(0)
@@ -292,39 +364,41 @@ class Window(QWidget):
                 if child.widget():
                     child.widget().deleteLater()
 
-
-    #plotting sound wav
+    # Drawing sound wave graph.
     def showSoundWav(self ):
-
-        #clear the graph
+        # Clear the sound wave graph.
         self.clearGraph(3)
-        # Sound figure
-        # plot data
+        # Reading wave file frames.
         spf = wave.open(self.WAVE_OUTPUT_FILEPATH, 'r')
         signal = spf.readframes(-1)
         signal = np.fromstring(signal, 'Int16')
-        # a figure instance to plot on
-        self.figureSoundWav = pyqtgraph.PlotWidget()
-        self.thirdsub_Layout.addWidget(self.figureSoundWav,2,1)
-        self.figureSoundWav.setYRange(-35000,35000)
-        self.figureSoundWav.setTitle('Wav - '+self.WAVE_OUTPUT_FILENAME)
-        self.figureSoundWav.setLabel('left','Amplitude (db)')
-        self.figureSoundWav.setLabel('bottom', 'Frame')
-        self.figureSoundWav.plot(signal)
+        # A figure instance to plot on.
+        figureSoundWav = pyqtgraph.PlotWidget()
+        self.thirdsub_Layout.addWidget(figureSoundWav,2,1)
+        figureSoundWav.setYRange(-40000,40000)
+        figureSoundWav.setTitle('Wav - '+self.WAVE_OUTPUT_FILENAME)
+        figureSoundWav.setLabel('left','Amplitude (db)')
+        figureSoundWav.setLabel('bottom', 'Frame')
+        figureSoundWav.plot(signal)
 
+    # Drawing the MFCC graph..
     def showMfcc(self):
-        # clear the graph
+        # Clear the graph.
         self.clearGraph(4)
-        #mfcc graph
+        # Reading the wav file.
         (rate, sig) = wav.read(self.WAVE_OUTPUT_FILEPATH)
-        mfcc_feat = mfcc(sig, rate,winstep=0.0025,numcep=self.NUMCEP,nfilt=self.NUMCEP)
 
-        # Sound figure
-        # a figure instance to plot on
+        # Execute mfcc function on the wav file.
+        # winstep - mfcc window step.
+        # numcep - coefficients number.
+        # nflit - filters number.
+        self.mfccResult = mfcc(sig, rate,winstep=0.005,numcep=self.NUMCEP,nfilt=self.NUMCEP)
+
+        # Sound figure.
         self.mfccfigure = plt.figure()
 
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to __init__
+        # This is the Canvas Widget that displays the `figure`.
+        # It takes the `figure` instance as a parameter to __init__.
         self.mfcccanvas = FigureCanvas(self.mfccfigure)
 
         # this is the Navigation widget
@@ -332,16 +406,12 @@ class Window(QWidget):
         self.thirdsub_Layout.addWidget(self.mfcccanvas,2,2)
 
         # create an axis
+        # 111 - 1x1 grid, first subplot
         ax = self.mfccfigure.add_subplot(111)
         ax.set_ylabel('MFCC values')
         ax.set_xlabel('MFC Coefficients')
-
-
         ax.set_title('MFCC - '+self.WAVE_OUTPUT_FILENAME)
-
-        ax.imshow(mfcc_feat, interpolation='nearest', origin='lower', aspect='auto')
-
-
+        ax.imshow(self.mfccResult, interpolation='nearest', origin='lower', aspect='auto')
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
