@@ -51,9 +51,3 @@ class AccuracyHistory(Callback):
         thread_loss = PlotLogs(self.graph_arr[Graph.LOSS_BATCH], self.logs[Graph.LOSS_BATCH], self.index_log_on_batch)
         thread_acc.start()
         thread_loss.start()
-
-    def plot(self, data):
-        try:
-            self.graph_acc.plot(self.loss)
-
-        except Exception as e: print(e)

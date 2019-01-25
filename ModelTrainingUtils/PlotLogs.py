@@ -9,4 +9,4 @@ class PlotLogs(Thread):
         self.index = index
 
     def run(self):
-        self.graph.plot(self.index, self.data, pen='r', name='blue')
+        self.graph.plot(self.index, self.data, pen='r', name='blue' )

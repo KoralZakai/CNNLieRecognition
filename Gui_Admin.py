@@ -1,7 +1,7 @@
 import ctypes
 from tkinter import *
 
-from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox
+from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox,QDialog
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore
@@ -19,7 +19,7 @@ class Feature():
     FEATURE_NBR = 3
 
 
-class Gui_Admin(QWidget):
+class Gui_Admin(QDialog):
     showMessageBox = QtCore.pyqtSignal(str)
     def __init__(self):
         super().__init__()
@@ -42,47 +42,70 @@ class Gui_Admin(QWidget):
     def _initModelDefaultParams(self):
         self.defaultDict = {'Batch size': 20, 'Learning Rate': 0.01, 'Epoch Number': 1, 'Column Number': 32}
         self.comboText = 'sgd'
-        self.train_percent = 0.9
+        self.train_percent = 0.8
 
     def _initUI(self):
-
+        self.setStyleSheet(open('StyleSheet.css').read())
+        #self.setStyleSheet("QDialog{font-size:20px bold;padding-top:5px;"
+        #                   "background-image: url(\"bg.png\");"
+        ##                   "background-repeat:no-repeat;"
+         #                  "object-fit:fil"
+         #                  "}")
         self.setWindowTitle(self.title)
         self.setGeometry(0, 0, self.width, self.height-60)
-        # Setting up the form fields
-        self.setStyleSheet("margin:0 auto")
-        main_frame = QtWidgets.QFrame(self)
-        main_frame.setStyleSheet("background-color:green;margin:0 auto")
-        main_layout = QtWidgets.QVBoxLayout(main_frame)
-        main_frame.setFixedSize(self.width, self.height-100)
-        main_layout.setAlignment(Qt.AlignTop)
 
-        form_frame = QtWidgets.QFrame(main_frame)
-        form_frame.setStyleSheet("background-color:red;")
-        form_layout = QtWidgets.QGridLayout(form_frame)
-        form_frame.setFixedHeight(self.height/2)
-        main_layout.addWidget(form_frame)
+        main_frame = QtWidgets.QFrame(self)
+        main_layout = QtWidgets.QGridLayout(main_frame)
+        main_frame.setFixedSize(self.width, self.height-100)
+
+        title_frame = QtWidgets.QFrame()
+        title_layout = QtWidgets.QHBoxLayout(title_frame)
+        title_layout.setAlignment(Qt.AlignCenter)
+        main_layout.addWidget(title_frame,0,1,1,1)
+
+        formTitleLbl = QtWidgets.QLabel('Admin Management Settings')
+
+        title_layout.addWidget(formTitleLbl)
+
+        first_sub_frame = QtWidgets.QFrame(main_frame)
+        first_sub_layout = QtWidgets.QVBoxLayout(first_sub_frame)
+        first_sub_frame.setFixedWidth(self.width/3)
+        main_layout.addWidget(first_sub_frame,1,0,1,2)
+
+        form_frame = QtWidgets.QFrame(first_sub_frame)
+        form_frame.setObjectName("FormFrame")
+        form_layout = QtWidgets.QFormLayout(form_frame)
+        lbl = QtWidgets.QLabel("Parameters")
+        lbl.setStyleSheet("font-size:30px bold")
+        lbl.setAlignment(Qt.AlignCenter)
+        first_sub_layout.addWidget(lbl)
+        first_sub_layout.addWidget(form_frame)
+
+
 
         self.graph_frame = QtWidgets.QFrame(main_frame)
-        self.graph_frame.setStyleSheet("background-color:blue")
-        self.graph_frame.setVisible(False)
-        self.graph_layout = QtWidgets.QHBoxLayout(self.graph_frame)
-        main_layout.addWidget(self.graph_frame)
+        self.graph_frame.setFixedWidth(self.width*2/3)
+        self.graph_layout = QtWidgets.QGridLayout(self.graph_frame)
+        main_layout.addWidget(self.graph_frame,1,1,2,2)
 
-
+        graphNames = ["Accuracy Epoch",
+                      "Loss Epoch",
+                      "Accuracy Batch",
+                      "Loss Batch"]
         self.graph_arr = []
+        j=0
         for i in range(4):
-            self.graph_arr.append(pg.PlotWidget())
+            self.graph_arr.append(pg.PlotWidget(title=graphNames[i]))
             self.graph_arr[i].showGrid(x=True,y=True)
             self.graph_arr[i].getAxis('bottom').enableAutoSIPrefix(False)
             self.graph_arr[i].getAxis('left').enableAutoSIPrefix(False)
-            self.graph_layout.addWidget(self.graph_arr[i])
+            self.graph_layout.addWidget(self.graph_arr[i], j, i % 2, 1, 1)
+            if i == 1:
+                j +=1
             if i in [Graph.ACC_BATCH, Graph.ACC_EPOCH]:
                 self.graph_arr[i].setYRange(0,1)
             else:
                 self.graph_arr[i].setYRange(0, 5)
-
-        formTitleLbl = QtWidgets.QLabel('Admin Management Settings')
-        form_layout.addWidget(formTitleLbl, 1, 1)
 
         myFont = QtGui.QFont()
         myFont.setBold(True)
@@ -93,34 +116,39 @@ class Gui_Admin(QWidget):
         i = 0
         for key, value in self.defaultDict.items():
             self.arrTxt.append(QtWidgets.QTextEdit("" + str(value), self))
-            self.arrTxt[i].setFixedWidth(150)
+            self.arrTxt[i].setFixedWidth(50)
             self.arrTxt[i].setFixedHeight(25)
-            self.arrTxt[i].setContentsMargins(20, 200, 200, 200)
             self.arrTxt[i].setAlignment(Qt.AlignCenter)
             arrLbl.append(QtWidgets.QLabel(key, self))
-            arrLbl[i].setFixedWidth(100)
-            form_layout.addWidget(arrLbl[i], i + 3, 1)
-            form_layout.addWidget(self.arrTxt[i], i + 3, 2)
+            form_layout.addRow(arrLbl[i], self.arrTxt[i])
             i += 1
-        lblComboBox, comboBox = self._initCombobox()
-        form_layout.addWidget(lblComboBox, 6, 1)
-        form_layout.addWidget(comboBox, 6, 2)
-        train_percentLbl, train_percentScale = self._initSlider()
-        form_layout.addWidget(train_percentLbl, 7, 1)
-        form_layout.addWidget(train_percentScale, 7, 2)
 
+        lblComboBox, comboBox = self._initCombobox()
+        form_layout.addRow(lblComboBox,comboBox)
+        train_percentLbl, train_percentScale = self._initSlider()
+        form_layout.addRow(train_percentLbl)
+        form_layout.addRow(train_percentScale)
+
+        btnLayout = QtWidgets.QHBoxLayout()
         self.btnBack = QtWidgets.QPushButton("Back")
         self.btnStartLearnPhase = QtWidgets.QPushButton("Start")
         self.btnStartLearnPhase.setFixedWidth(150)
-        form_layout.addWidget(self.btnBack, 8, 1)
-        form_layout.addWidget(self.btnStartLearnPhase, 8, 2)
+        self.btnBack.setFixedWidth(150)
+        btnLayout.addWidget(self.btnBack)
+        btnLayout.addWidget(self.btnStartLearnPhase)
+        first_sub_layout.addLayout(btnLayout)
         self.btnStartLearnPhase.clicked.connect(lambda: self.learnPhase())
 
+        text_edit = QtWidgets.QTextEdit("Here")
+        lbl = QtWidgets.QLabel("Log:")
+        lbl.setAlignment(Qt.AlignCenter)
+        lbl.setStyleSheet("font-size:32px bold")
+        first_sub_layout.addWidget(lbl)
+        first_sub_layout.addWidget(text_edit)
         self.show()
 
-
     def _initSlider(self):
-        train_percentLbl = QtWidgets.QLabel('Training percent =  50%')
+        train_percentLbl = QtWidgets.QLabel('Training percent =  {}%\t'.format(int(self.train_percent*100)))
         train_percentScale = QtWidgets.QSlider(Qt.Horizontal)
         train_percentScale.setFixedWidth(150)
         train_percentScale.setMinimum(0)
@@ -145,7 +173,7 @@ class Gui_Admin(QWidget):
 
     def updateSlideValue(self, learnRateScale, train_percentLbl):
         self.train_percent = learnRateScale.value() / 100
-        train_percentLbl.setText('Training percent =  ' + str(learnRateScale.value()) + '%  ')
+        train_percentLbl.setText('Training percent =  ' + str(learnRateScale.value()) + '%')
 
     def learnPhase(self):
         try:
@@ -175,7 +203,7 @@ class Gui_Admin(QWidget):
 
     def init_graph_by_params(self,epoch_nbr):
         self.graph_arr[Graph.LOSS_EPOCH].setXRange(1,epoch_nbr)
-        self.graph_arr[Graph.ACC_BATCH].setXRange(1,epoch_nbr)
+        self.graph_arr[Graph.ACC_EPOCH].setXRange(1,epoch_nbr)
         for lbl in [Graph.ACC_EPOCH, Graph.ACC_BATCH]:
             self.graph_arr[lbl].setLabel('bottom', 'Epoch number', units='times')
             self.graph_arr[lbl].setLabel('left', 'Accuracy', units='%')
