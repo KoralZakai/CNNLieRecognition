@@ -47,10 +47,15 @@ class Window(QWidget):
         self.WAVE_OUTPUT_FILENAME = None
         self.WAVE_OUTPUT_FILEPATH = None
         self.pickedModelPath = None
+        self.checkEnv = True
+        self.checkEnvErr = None
 
-        winmm = windll.winmm
-        print('waveInGetNumDevs=', winmm.waveInGetNumDevs())
-        self.initUI()
+        self.checkEnvironment()
+        if self.checkEnv:
+            self.initUI()
+        else:
+            QMessageBox.about(self, "Error", self.checkEnvErr)
+
 
     def initUI(self):
         self.setWindowTitle(self.title)
@@ -179,6 +184,20 @@ class Window(QWidget):
         #show the window
         self.show()
 
+    # Validate that the working environment is safe to work .
+    def checkEnvironment(self):
+        winmm = windll.winmm
+        if winmm.waveInGetNumDevs() != 1:
+            self.checkEnv = False
+            self.checkEnvErr = "Microphone is missing, please plugin you'r microphone"
+
+        # Checking existing models
+        modelPath = os.path.dirname(os.path.realpath(__file__)) + "\\Model\\"
+        modelDir = os.listdir(modelPath)
+        if len(modelDir) == 0:
+            self.checkEnv = False
+            self.checkEnvErr = "There is no Models to work with"
+
     def buildCoefComboBox(self):
         self.comboBoxCoef = QtWidgets.QComboBox(self)
         for i in range(32, 226):
@@ -243,7 +262,7 @@ class Window(QWidget):
                 self.dataProcessing()
 
             else:
-                QMessageBox.about(form, "Error", "Wrong File Type , Please Use Only Wav Files")
+                QMessageBox.about(form, "Error", "Wrong file type , please use only wav files")
 
     #Recording voice using microphone
     def startRecord(self):
