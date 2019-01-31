@@ -13,12 +13,13 @@ class Graph():
 
 class AccuracyHistory(Callback):
 
-    def __init__(self, graph, frame,epoch):
+    def __init__(self, graph, frame,logPrint):
         self.graph_arr = graph
         frame.setVisible(True)
         self.index_on_epoch = self.index_on_batch = 0
         self.index_log_on_batch = []
         self.index_log_on_epoch = []
+        self.log_print = logPrint
 
     def on_train_begin(self, logs={}):
         self.logs = [[], [], [], []]
@@ -49,5 +50,6 @@ class AccuracyHistory(Callback):
         self.logs[Graph.LOSS_BATCH].append(logs.get('loss'))
         thread_acc = PlotLogs(self.graph_arr[Graph.ACC_BATCH], self.logs[Graph.ACC_BATCH], self.index_log_on_batch)
         thread_loss = PlotLogs(self.graph_arr[Graph.LOSS_BATCH], self.logs[Graph.LOSS_BATCH], self.index_log_on_batch)
+        self.log_print.emit("acc: {} loss:{}".format(logs.get('acc'),logs.get('loss')))
         thread_acc.start()
         thread_loss.start()

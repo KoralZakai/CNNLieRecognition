@@ -1,9 +1,10 @@
 import ctypes
 import os
 import signal
+from multiprocessing.pool import ThreadPool, Pool
 from tkinter import *
-
-from PyQt5.QtGui import QIcon
+from datetime import datetime
+from PyQt5.QtGui import QIcon, QColor
 from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox,QDialog
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import Qt
@@ -23,10 +24,8 @@ class Feature():
 
 
 class Gui_Admin(QDialog):
+    logText = QtCore.pyqtSignal(str)
     showMessageBox = QtCore.pyqtSignal(str)
-    # Register the signal handlers
-    #signal.signal(signal.SIGTERM, service_shutdown)
-    #signal.signal(signal.SIGINT, service_shutdown)
     def __init__(self):
         super(Gui_Admin, self).__init__()
         self.queue = mp.Queue()
@@ -44,6 +43,11 @@ class Gui_Admin(QDialog):
         self._initModelDefaultParams()
         self._initUI()
         self.showMessageBox.connect(self.on_show_message_box)
+        self.logText.connect(self._show_log)
+        self.CNNThread = None
+
+    def _show_log(self,log_text):
+        self.text_edit.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S')+" : " +log_text)
 
     def _initModelDefaultParams(self):
         self.defaultDict = {'Batch size': 20, 'Learning Rate': 0.01, 'Epoch Number': 1, 'Column Number': 32}
@@ -141,12 +145,17 @@ class Gui_Admin(QDialog):
         first_sub_layout.addLayout(btnLayout)
         self.btnStartLearnPhase.clicked.connect(lambda: self.learnPhase())
 
-        text_edit = QtWidgets.QTextEdit("Here")
+        myFont = QtGui.QFont()
+        myFont.setPixelSize(16)
+        self.text_edit = QtWidgets.QTextEdit("")
+        self.text_edit.setStyleSheet("color:black")
+        self.text_edit.setFont(myFont)
+        self.text_edit.setEnabled(False)
         lbl = QtWidgets.QLabel("Log:")
         lbl.setAlignment(Qt.AlignCenter)
         lbl.setStyleSheet("font-size:32px bold")
         first_sub_layout.addWidget(lbl)
-        first_sub_layout.addWidget(text_edit)
+        first_sub_layout.addWidget(self.text_edit)
         self.show()
 
     def _initSlider(self):
@@ -186,19 +195,21 @@ class Gui_Admin(QDialog):
                 epoch_nbr = int(self.arrTxt[Feature.EPOCH_NBR].toPlainText())
                 feature_nbr = int(self.arrTxt[Feature.FEATURE_NBR].toPlainText())
                 self.init_graph_by_params(epoch_nbr)
-                displayGraph = AccuracyHistory(self.graph_arr,self.graph_frame,epoch_nbr)
-                self.CNN_model = CNN(calback_func =displayGraph,
+                displayGraph = AccuracyHistory(self.graph_arr,self.graph_frame,self.logText)
+                self.CNN_model = CNN(output=self.logText,
+                                     calback_func =displayGraph,
                                      batch_size=batch_size,
                                      train_perc=self.train_percent,
                                      epoch_nbr=epoch_nbr,
                                      column_nbr=feature_nbr,
                                      optimizer=self.comboText,
                                      learn_rate=learning_rate)
-                #workr = mp.Process(target=CNNThreadWork, args=(self.CNN_model, q))
+
                 self.CNNThread = CNNThreadWork(self,self.CNN_model)
+                self.CNNThread.daemon = True
                 self.CNNThread.start()
             else:
-                self.CNNThread.shutdown_flag.set()
+                self.CNNThread.stopThread()
                 self.CNNThread.join()
                 self.btnStartLearnPhase.setText("Start")
         except Exception as e:
@@ -218,6 +229,7 @@ class Gui_Admin(QDialog):
         if res == 'Finished':
             buttonReply = QMessageBox.question(self, 'System message', "Do you want to save model?",
                                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            self.text_edit.setText("")
         if buttonReply == QMessageBox.Yes:
             path = self.file_save()
             QMessageBox.information(self, "Success", "The file has been saved to:\r\n {}.h5".format(path))
