@@ -1,3 +1,4 @@
+from matplotlib.figure import Figure
 from python_speech_features import mfcc
 import scipy.io.wavfile as wav
 from PyQt5.QtGui import QPixmap, QIcon
@@ -193,8 +194,7 @@ class Gui_User(QWidget):
         self.mfccGraphsBtn.clicked.connect(lambda: self.showMfcc())
         self.settings_Layout.addRow(self.mfccGraphsBtn,self.processGraphsBtn)
 
-        # Sound figure.
-        self.mfccfigure = plt.figure()
+
 
         #show the window
         self.show()
@@ -427,6 +427,8 @@ class Gui_User(QWidget):
         # nflit - filters number.
         self.mfccResult = mfcc(sig, rate,winstep=0.005,numcep=self.NUMCEP,nfilt=self.NUMCEP)
 
+        # Sound figure.
+        self.mfccfigure = Figure()
 
         # This is the Canvas Widget that displays the `figure`.
         # It takes the `figure` instance as a parameter to __init__.
