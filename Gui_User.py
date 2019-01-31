@@ -1,7 +1,7 @@
-import ctypes
-import glob
+from matplotlib.figure import Figure
 from python_speech_features import mfcc
 import scipy.io.wavfile as wav
+from PyQt5.QtGui import QPixmap, QIcon
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5 import QtGui, QtWidgets, uic
@@ -12,17 +12,17 @@ import sys
 import pyaudio
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 import matplotlib.pyplot as plt
-import numpy as np
-import os
 from PyQt5.QtCore import Qt
 import pyqtgraph
 from ModelTrainingUtils.CNN import *
 import ctypes
-from ctypes import *
 
-class Window(QWidget):
+
+
+
+class Gui_User(QWidget):
     def __init__(self, parent=None):
-        super(Window, self).__init__(parent)
+        super(Gui_User, self).__init__(parent)
         # init the initial parameters of this GUI
         user32 = ctypes.windll.user32
         user32.SetProcessDPIAware()
@@ -58,18 +58,26 @@ class Window(QWidget):
 
 
     def initUI(self):
+        self.setStyleSheet(open('StyleSheet.css').read())
+        self.setObjectName("Windowimg")
         self.setWindowTitle(self.title)
+        self.setWindowIcon(QIcon(os.getcwd()+'\pictures\logo.png'))
         self.setGeometry(0, 0, self.width, self.height-60)
         #Creating main container-frame, parent it to QWindow
         self.main_frame = QtWidgets.QFrame(self)
-
+        self.main_frame.setObjectName("MainFrame")
+        #Return to main window button
+        returnBtn = QtWidgets.QPushButton("", self)
+        returnBtn.setStyleSheet("QPushButton {background: url(Pictures/backimg.png) no-repeat transparent;} ")
+        returnBtn.setFixedWidth(110)
+        returnBtn.setFixedHeight(110)
+        returnBtn.clicked.connect(self.closeThisWindow)
 
         #the first sub window
         self.main_layout = QtWidgets.QVBoxLayout(self.main_frame)
         self.firstsub_Frame = QtWidgets.QFrame(self.main_frame)
         self.main_layout.addWidget(self.firstsub_Frame)
         self.firstsub_Layout = QtWidgets.QFormLayout(self.firstsub_Frame)
-
 
 
         #Setting up the form fields
@@ -172,6 +180,7 @@ class Window(QWidget):
 
         #Predict button
         self.processGraphsBtn = QtWidgets.QPushButton("Predict", self)
+        self.processGraphsBtn.setObjectName("Buttons")
         self.processGraphsBtn.setFixedWidth(131)
         self.processGraphsBtn.setFixedHeight(25)
         self.processGraphsBtn.clicked.connect(lambda: self.dataProcessingmfcc())
@@ -179,17 +188,20 @@ class Window(QWidget):
 
         # Predict button
         self.mfccGraphsBtn = QtWidgets.QPushButton("MFCC", self)
+        self.mfccGraphsBtn.setObjectName("Buttons")
         self.mfccGraphsBtn.setFixedWidth(131)
         self.mfccGraphsBtn.setFixedHeight(25)
         self.mfccGraphsBtn.clicked.connect(lambda: self.showMfcc())
         self.settings_Layout.addRow(self.mfccGraphsBtn,self.processGraphsBtn)
+
+
 
         #show the window
         self.show()
 
     # Validate that the working environment is safe to work .
     def checkEnvironment(self):
-        winmm = windll.winmm
+        winmm = ctypes.windll.winmm
         if winmm.waveInGetNumDevs() != 1:
             self.checkEnv = False
             self.checkEnvErr = "Microphone is missing, please plugin you'r microphone"
@@ -263,7 +275,6 @@ class Window(QWidget):
                 self.WAVE_OUTPUT_FILENAME = word
                 self.WAVE_OUTPUT_FILEPATH = fileName
                 self.dataProcessing()
-
             else:
                 QMessageBox.about(form, "Error", "Wrong file type , please use only wav files")
 
@@ -417,7 +428,7 @@ class Window(QWidget):
         self.mfccResult = mfcc(sig, rate,winstep=0.005,numcep=self.NUMCEP,nfilt=self.NUMCEP)
 
         # Sound figure.
-        self.mfccfigure = plt.figure()
+        self.mfccfigure = Figure()
 
         # This is the Canvas Widget that displays the `figure`.
         # It takes the `figure` instance as a parameter to __init__.
@@ -435,8 +446,10 @@ class Window(QWidget):
         ax.set_title('MFCC - '+self.WAVE_OUTPUT_FILENAME)
         ax.imshow(self.mfccResult, interpolation='nearest', origin='lower', aspect='auto')
 
+    def closeThisWindow(self):
+        self.destroy()
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    main = Window()
-    main.show()
+    main = Gui_User()
     sys.exit(app.exec_())
