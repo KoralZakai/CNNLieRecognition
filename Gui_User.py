@@ -369,8 +369,8 @@ class Gui_User(QWidget):
             self.NUMCEP=int(self.comboBoxCoef.currentText())
             self.showMfcc()
 
-        #modelPath = os.path.dirname(os.path.realpath(__file__)) + "\\db\\wav\\"
-        """for modelname in os.listdir(modelPath):
+        modelPath = os.path.dirname(os.path.realpath(__file__)) + "\\db\\wav\\"
+        for modelname in os.listdir(modelPath):
             if modelname.endswith('.wav'):
                 (rate, sig) = wav.read(modelPath+modelname)
                 ress = mfcc(sig, rate,winstep=0.005,numcep=self.NUMCEP,nfilt=self.NUMCEP)
@@ -378,7 +378,7 @@ class Gui_User(QWidget):
                 print(modelname)
                 print(newCNN.predict(ress))
                 print("*****************************************************************************\n")
-        """
+
          #print(newCNN.predict(self.mfccResult))
 
     # Clearing graphs

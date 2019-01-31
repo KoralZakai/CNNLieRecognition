@@ -1,7 +1,9 @@
 import ctypes
+import os
 import signal
 from tkinter import *
 
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox,QDialog
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import Qt
@@ -50,18 +52,14 @@ class Gui_Admin(QDialog):
 
     def _initUI(self):
         self.setStyleSheet(open('StyleSheet.css').read())
-        #self.setStyleSheet("QDialog{font-size:20px bold;padding-top:5px;"
-        #                   "background-image: url(\"bg.png\");"
-        ##                   "background-repeat:no-repeat;"
-         #                  "object-fit:fil"
-         #                  "}")
+        self.setWindowIcon(QIcon(os.getcwd() + '\pictures\logo.png'))
         self.setWindowTitle(self.title)
         self.setGeometry(0, 0, self.width, self.height-60)
 
         main_frame = QtWidgets.QFrame(self)
         main_layout = QtWidgets.QGridLayout(main_frame)
         main_frame.setFixedSize(self.width, self.height-100)
-
+        main_frame.setObjectName("MainFrame")
         title_frame = QtWidgets.QFrame()
         title_layout = QtWidgets.QHBoxLayout(title_frame)
         title_layout.setAlignment(Qt.AlignCenter)
@@ -205,14 +203,6 @@ class Gui_Admin(QDialog):
                 self.btnStartLearnPhase.setText("Start")
         except Exception as e:
             print(e)
-
-    def worker(running_flag, q):
-        print("-----------------creating dataset-----------------")
-        CNN_model.createDataSet()
-        print("-----------------train model----------------")
-        CNN_model.trainModel()
-        app.showMessageBox.emit('Finished')
-
 
     def init_graph_by_params(self,epoch_nbr):
         self.graph_arr[Graph.LOSS_EPOCH].setXRange(1,epoch_nbr)
