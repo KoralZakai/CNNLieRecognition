@@ -23,7 +23,7 @@ class Feature():
     FEATURE_NBR = 3
 
 
-class Gui_Admin(QDialog):
+class Gui_Admin(QWidget):
     logText = QtCore.pyqtSignal(str)
     showMessageBox = QtCore.pyqtSignal(str)
     def __init__(self):
@@ -55,7 +55,7 @@ class Gui_Admin(QDialog):
         self.train_percent = 0.8
 
     def _initUI(self):
-        self.setStyleSheet(open('StyleSheet.css').read())
+        #self.setStyleSheet(open('StyleSheet.css').read())
         self.setWindowIcon(QIcon(os.getcwd() + '\pictures\logo.png'))
         self.setWindowTitle(self.title)
         self.setGeometry(0, 0, self.width, self.height-60)

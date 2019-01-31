@@ -368,8 +368,9 @@ class Gui_User(QWidget):
             self.comboBoxCoef.setCurrentIndex(newCNN.column_nbr-32)
             self.NUMCEP=int(self.comboBoxCoef.currentText())
             self.showMfcc()
-
-        modelPath = os.path.dirname(os.path.realpath(__file__)) + "\\db\\wav\\"
+        cnnResult = newCNN.predict(self.mfccResult)
+        QMessageBox.information(self, "Results", "Result : "+str(cnnResult[0]))
+        """modelPath = os.path.dirname(os.path.realpath(__file__)) + "\\db\\wav\\"
         for modelname in os.listdir(modelPath):
             if modelname.endswith('.wav'):
                 (rate, sig) = wav.read(modelPath+modelname)
@@ -377,9 +378,8 @@ class Gui_User(QWidget):
                 print("*****************************************************************************")
                 print(modelname)
                 print(newCNN.predict(ress))
-                print("*****************************************************************************\n")
+                print("*****************************************************************************\n")"""
 
-         #print(newCNN.predict(self.mfccResult))
 
     # Clearing graphs
     # layoutnum - the layout number that includes the wanted graph to clear.

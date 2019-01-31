@@ -24,7 +24,7 @@ class Main_Window(QWidget):
 
 
     def initUI(self):
-        self.setStyleSheet(open('StyleSheet.css').read())
+        #self.setStyleSheet(open('StyleSheet.css').read())
         self.setWindowTitle(self.title)
         self.setWindowIcon(QIcon(os.getcwd()+'\pictures\logo.png'))
         self.setGeometry(0, 0, self.width, self.height-60)
