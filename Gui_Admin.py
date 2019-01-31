@@ -194,9 +194,9 @@ class Gui_Admin(QDialog):
                                      column_nbr=feature_nbr,
                                      optimizer=self.comboText,
                                      learn_rate=learning_rate)
-                workr = mp.Process(target=CNNThreadWork, args=(self.CNN_model, q))
-                #self.CNNThread = CNNThreadWork(self,self.CNN_model)
-                #self.CNNThread.start()
+                #workr = mp.Process(target=CNNThreadWork, args=(self.CNN_model, q))
+                self.CNNThread = CNNThreadWork(self,self.CNN_model)
+                self.CNNThread.start()
             else:
                 self.CNNThread.shutdown_flag.set()
                 self.CNNThread.join()
