@@ -1,4 +1,5 @@
 import ctypes
+import signal
 from tkinter import *
 
 from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox,QDialog
@@ -7,7 +8,7 @@ from PyQt5.QtCore import Qt
 from PyQt5 import QtCore
 from ModelTrainingUtils.CNN import CNN as CNN
 import pyqtgraph as pg
-
+import multiprocessing as mp
 from ModelTrainingUtils.AccuracyHistory import AccuracyHistory, Graph
 from ModelTrainingUtils.CNNThreadWork import CNNThreadWork
 
@@ -21,9 +22,12 @@ class Feature():
 
 class Gui_Admin(QDialog):
     showMessageBox = QtCore.pyqtSignal(str)
+    # Register the signal handlers
+    #signal.signal(signal.SIGTERM, service_shutdown)
+    #signal.signal(signal.SIGINT, service_shutdown)
     def __init__(self):
-        super().__init__()
         super(Gui_Admin, self).__init__()
+        self.queue = mp.Queue()
         user32 = ctypes.windll.user32
         user32.SetProcessDPIAware()
         [w, h] = [user32.GetSystemMetrics(0), user32.GetSystemMetrics(1)]
@@ -185,21 +189,30 @@ class Gui_Admin(QDialog):
                 feature_nbr = int(self.arrTxt[Feature.FEATURE_NBR].toPlainText())
                 self.init_graph_by_params(epoch_nbr)
                 displayGraph = AccuracyHistory(self.graph_arr,self.graph_frame,epoch_nbr)
-                self.CNN_model = CNN(calbackFunc=displayGraph,
+                self.CNN_model = CNN(calback_func =displayGraph,
                                      batch_size=batch_size,
                                      train_perc=self.train_percent,
                                      epoch_nbr=epoch_nbr,
                                      column_nbr=feature_nbr,
                                      optimizer=self.comboText,
                                      learn_rate=learning_rate)
-
-                self.CNNThread = CNNThreadWork(self,self.CNN_model)
-                self.CNNThread.start()
+                workr = mp.Process(target=CNNThreadWork, args=(self.CNN_model, q))
+                #self.CNNThread = CNNThreadWork(self,self.CNN_model)
+                #self.CNNThread.start()
             else:
-                self.CNNThread.terminate()
+                self.CNNThread.shutdown_flag.set()
+                self.CNNThread.join()
                 self.btnStartLearnPhase.setText("Start")
         except Exception as e:
             print(e)
+
+    def worker(running_flag, q):
+        print("-----------------creating dataset-----------------")
+        CNN_model.createDataSet()
+        print("-----------------train model----------------")
+        CNN_model.trainModel()
+        app.showMessageBox.emit('Finished')
+
 
     def init_graph_by_params(self,epoch_nbr):
         self.graph_arr[Graph.LOSS_EPOCH].setXRange(1,epoch_nbr)

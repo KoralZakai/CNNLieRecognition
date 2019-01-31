@@ -1,6 +1,10 @@
 from __future__ import print_function
+
+import sys
+
 import keras
 import tensorflow as tf
+from PyQt5 import QtCore
 from keras import regularizers
 from keras.applications.vgg16 import VGG16
 from keras.callbacks import Callback
@@ -13,9 +17,6 @@ import os
 import tensorflow as tf
 from keras import backend as K
 from keras.models import load_model
-from PyQt5 import QtCore
-
-from ModelTrainingUtils.AccuracyHistory import AccuracyHistory
 
 CLASSES_NBR = 2
 VERBOSE = 1
@@ -24,6 +25,7 @@ INPUTFILES_NBR = 535
 TESTFILES_NBR = 30
 
 class CNN():
+
     # constructor to initialize parameters for data and model
     # batch_size - int value number of training examples utilized in one iteration
     # train_perc - the percent of data which usig to train the model
@@ -31,7 +33,9 @@ class CNN():
     # learn_rate - controls how much we are adjusting the weights of our network
     # optimizer - optimizer for model could be one of ('sgd','adam','rmsprop')
     # column_nbr - number of columns in the input data minimum 32
-    def __init__(self,model=None, batch_size=10, train_perc=0.8, epoch_nbr=10, learn_rate=0.001, optimizer='adam', column_nbr=32):
+    def __init__(self, model=None, calback_func=None, batch_size=10, train_perc=0.8, epoch_nbr=10, learn_rate=0.001, optimizer='adam', column_nbr=32):
+
+        self.AccuracyCallback = calback_func
         super().__init__()
         self.line_nbr = 225
         if model != None:
@@ -54,11 +58,11 @@ class CNN():
 
         self.default_graph = tf.get_default_graph()
 
-        #self.default_graph.finalize()  # avoid modifications
 
 
 
-
+    def cancel_process_signal_func(self):
+        sys.exit()
 
     # initialize the optimizer of the model
     def _setOptimizer(self, optimizer, learn_rate):
@@ -188,7 +192,7 @@ class CNN():
                                                   embeddings_metadata=None,
                                                   embeddings_data=None,
                                                   update_freq='epoch')
-        return [tensorBoard, earlyStop, AccuracyHistory]
+        return [tensorBoard, earlyStop, self.AccuracyCallback]
 
 
 
