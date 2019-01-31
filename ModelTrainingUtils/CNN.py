@@ -60,9 +60,6 @@ class CNN():
     def set_running_status(self, isRun):
         self.isRun = isRun
 
-    def cancel_process_signal_func(self):
-        sys.exit()
-
     # initialize the optimizer of the model
     def _setOptimizer(self, optimizer, learn_rate):
         if optimizer == 'adam':
@@ -71,6 +68,7 @@ class CNN():
             self.opt = keras.optimizers.SGD(lr=learn_rate)
         else:
             self.opt = keras.optimizers.RMSprop(lr=learn_rate)
+        self.output.emit("Setup optimizer")
 
     # init data set of csv files ta
     def createDataSet(self):
@@ -94,6 +92,7 @@ class CNN():
                 self.label[i] = True
             else:
                 self.label[i] = False
+            self.output.emit("the file {} has been parsed".format(filenames[i]))
 
     # load csv files into arrays
 
@@ -135,6 +134,7 @@ class CNN():
         # compile the model
         self.model.compile(loss='binary_crossentropy', optimizer=self.opt, metrics=['accuracy'])
         self.model.summary()
+        self.output.emit(self.model.summary())
 
     def saveModel(self, fileName):
         self.model.save('{}.h5'.format(fileName))  # creates a HDF5 file 'my_model.h5'

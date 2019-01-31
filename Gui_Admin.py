@@ -99,6 +99,7 @@ class Gui_Admin(QWidget):
                       "Accuracy Batch",
                       "Loss Batch"]
         self.graph_arr = []
+        self.graph_frame.setVisible(False)
         j=0
         for i in range(4):
             self.graph_arr.append(pg.PlotWidget(title=graphNames[i]))
@@ -204,7 +205,7 @@ class Gui_Admin(QWidget):
                                      column_nbr=feature_nbr,
                                      optimizer=self.comboText,
                                      learn_rate=learning_rate)
-
+                self.graph_frame.setVisible(True)
                 self.CNNThread = CNNThreadWork(self,self.CNN_model)
                 self.CNNThread.daemon = True
                 self.CNNThread.start()
@@ -216,8 +217,6 @@ class Gui_Admin(QWidget):
             print(e)
 
     def init_graph_by_params(self,epoch_nbr):
-        self.graph_arr[Graph.LOSS_EPOCH].setXRange(1,epoch_nbr)
-        self.graph_arr[Graph.ACC_EPOCH].setXRange(1,epoch_nbr)
         for lbl in [Graph.ACC_EPOCH, Graph.ACC_BATCH]:
             self.graph_arr[lbl].setLabel('bottom', 'Epoch number', units='times')
             self.graph_arr[lbl].setLabel('left', 'Accuracy', units='%')
