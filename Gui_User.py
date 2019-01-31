@@ -1,5 +1,5 @@
 from matplotlib.figure import Figure
-from python_speech_features import mfcc
+
 import scipy.io.wavfile as wav
 from PyQt5.QtGui import QPixmap, QIcon
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -370,15 +370,7 @@ class Gui_User(QWidget):
             self.showMfcc()
         cnnResult = newCNN.predict(self.mfccResult)
         QMessageBox.information(self, "Results", "Result : "+str(cnnResult[0]))
-        """modelPath = os.path.dirname(os.path.realpath(__file__)) + "\\db\\wav\\"
-        for modelname in os.listdir(modelPath):
-            if modelname.endswith('.wav'):
-                (rate, sig) = wav.read(modelPath+modelname)
-                ress = mfcc(sig, rate,winstep=0.005,numcep=self.NUMCEP,nfilt=self.NUMCEP)
-                print("*****************************************************************************")
-                print(modelname)
-                print(newCNN.predict(ress))
-                print("*****************************************************************************\n")"""
+
 
 
     # Clearing graphs
@@ -406,13 +398,14 @@ class Gui_User(QWidget):
         signal = spf.readframes(-1)
         signal = np.fromstring(signal, 'Int16')
         # A figure instance to plot on.
-        figureSoundWav = pyqtgraph.PlotWidget()
-        self.thirdsub_Layout.addWidget(figureSoundWav,2,1)
-        figureSoundWav.setYRange(-40000,40000)
-        figureSoundWav.setTitle('Wav - '+self.WAVE_OUTPUT_FILENAME)
-        figureSoundWav.setLabel('left','Amplitude (db)')
-        figureSoundWav.setLabel('bottom', 'Frame')
-        figureSoundWav.plot(signal)
+
+        self.figureSoundWav = pyqtgraph.PlotWidget()
+        self.thirdsub_Layout.addWidget(self.figureSoundWav,2,1)
+        self.figureSoundWav.setYRange(-40000,40000)
+        self.figureSoundWav.setTitle('Wav - '+self.WAVE_OUTPUT_FILENAME)
+        self.figureSoundWav.setLabel('left','Amplitude (db)')
+        self.figureSoundWav.setLabel('bottom', 'Frame')
+        self.figureSoundWav.plot(signal)
 
     # Drawing the MFCC graph..
     def showMfcc(self):

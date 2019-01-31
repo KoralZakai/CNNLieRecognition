@@ -55,7 +55,7 @@ class Gui_Admin(QWidget):
         self.train_percent = 0.8
 
     def _initUI(self):
-        #self.setStyleSheet(open('StyleSheet.css').read())
+        self.setStyleSheet(open('StyleSheet.css').read())
         self.setWindowIcon(QIcon(os.getcwd() + '\pictures\logo.png'))
         self.setWindowTitle(self.title)
         self.setGeometry(0, 0, self.width, self.height-60)
@@ -64,6 +64,14 @@ class Gui_Admin(QWidget):
         main_layout = QtWidgets.QGridLayout(main_frame)
         main_frame.setFixedSize(self.width, self.height-100)
         main_frame.setObjectName("MainFrame")
+
+        #Return to main window button
+        returnBtn = QtWidgets.QPushButton("", self)
+        returnBtn.setStyleSheet("QPushButton {background: url(Pictures/backimg.png) no-repeat transparent;} ")
+        returnBtn.setFixedWidth(110)
+        returnBtn.setFixedHeight(110)
+        returnBtn.clicked.connect(self.closeThisWindow)
+
         title_frame = QtWidgets.QFrame()
         title_layout = QtWidgets.QHBoxLayout(title_frame)
         title_layout.setAlignment(Qt.AlignCenter)
@@ -240,6 +248,8 @@ class Gui_Admin(QWidget):
         self.CNN_model.saveModel(path)
         return path
 
+    def closeThisWindow(self):
+        self.destroy()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
