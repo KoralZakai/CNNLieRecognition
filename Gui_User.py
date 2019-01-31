@@ -63,11 +63,14 @@ class Window(QWidget):
         #Creating main container-frame, parent it to QWindow
         self.main_frame = QtWidgets.QFrame(self)
 
+
         #the first sub window
         self.main_layout = QtWidgets.QVBoxLayout(self.main_frame)
         self.firstsub_Frame = QtWidgets.QFrame(self.main_frame)
         self.main_layout.addWidget(self.firstsub_Frame)
         self.firstsub_Layout = QtWidgets.QFormLayout(self.firstsub_Frame)
+
+
 
         #Setting up the form fields
         #form title init
@@ -321,7 +324,7 @@ class Window(QWidget):
         self.WAVE_OUTPUT_FILENAME = self.WAVE_OUTPUT_FILENAME + ".wav"
         path = os.path.dirname(os.path.realpath(__file__))+"\\db\\"
         if not os.path.exists(path+"\\Records"):
-            os.mkdir("Records")
+            os.mkdir(path+"\\Records")
         wf = wave.open("db\\Records\\"+self.WAVE_OUTPUT_FILENAME, 'wb')
         wf.setnchannels(self.CHANNELS)
         wf.setsampwidth(self.pyrecorded.get_sample_size(self.FORMAT))
