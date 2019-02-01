@@ -26,8 +26,8 @@ class Feature():
 class Gui_Admin(QWidget):
     logText = QtCore.pyqtSignal(str)
     showMessageBox = QtCore.pyqtSignal(str)
-    def __init__(self):
-        super(Gui_Admin, self).__init__()
+    def __init__(self,parent=None):
+        super(Gui_Admin, self).__init__(parent)
         self.queue = mp.Queue()
         user32 = ctypes.windll.user32
         user32.SetProcessDPIAware()
@@ -250,7 +250,8 @@ class Gui_Admin(QWidget):
         return path
 
     def closeThisWindow(self):
-        self.destroy()
+        self.parent().show()
+        self.close()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

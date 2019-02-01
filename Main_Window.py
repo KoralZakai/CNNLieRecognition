@@ -83,14 +83,13 @@ class Main_Window(QWidget):
         self.show()
 
     def openAdminGui(self):
-        adminGui = Gui_Admin()
+        adminGui = Gui_Admin(self)
         adminGui.show()
-        self.close()
 
     def openUserGui(self):
-        userGui = Gui_User()
+        userGui = Gui_User(self)
         userGui.show()
-        self.close()
+
         
 
 

@@ -441,6 +441,7 @@ class Gui_User(QWidget):
         ax.imshow(self.mfccResult, interpolation='nearest', origin='lower', aspect='auto')
 
     def closeThisWindow(self):
+        self.parent().show()
         self.close()
 
 if __name__ == '__main__':
