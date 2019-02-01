@@ -15,7 +15,7 @@ from PyQt5.QtCore import Qt
 import pyqtgraph
 from ModelTrainingUtils.CNN import *
 import ctypes
-
+from Main_Window import Main_Window
 class Gui_User(QWidget):
     def __init__(self, parent=None):
         super(Gui_User, self).__init__(parent)
@@ -45,7 +45,7 @@ class Gui_User(QWidget):
         self.pickedModelPath = None
         self.checkEnv = True
         self.checkEnvErr = None
-        self.parent = parent
+
         self.checkEnvironment()
         if self.checkEnv:
             self.initUI()
@@ -443,7 +443,6 @@ class Gui_User(QWidget):
 
     def closeThisWindow(self):
         self.close()
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
