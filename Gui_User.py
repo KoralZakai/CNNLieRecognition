@@ -1,5 +1,4 @@
 from matplotlib.figure import Figure
-
 import scipy.io.wavfile as wav
 from PyQt5.QtGui import QPixmap, QIcon
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
@@ -17,9 +16,6 @@ import pyqtgraph
 from ModelTrainingUtils.CNN import *
 import ctypes
 
-
-
-
 class Gui_User(QWidget):
     def __init__(self, parent=None):
         super(Gui_User, self).__init__(parent)
@@ -36,7 +32,7 @@ class Gui_User(QWidget):
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 2
         self.NUMCEP = 32
-        self.RATE = 44100
+        self.RATE = 8000
         self.frames = None
         self.pyrecorded = None
         self.stream = None
@@ -49,7 +45,7 @@ class Gui_User(QWidget):
         self.pickedModelPath = None
         self.checkEnv = True
         self.checkEnvErr = None
-
+        self.parent = parent
         self.checkEnvironment()
         if self.checkEnv:
             self.initUI()
@@ -396,16 +392,22 @@ class Gui_User(QWidget):
         # Reading wave file frames.
         spf = wave.open(self.WAVE_OUTPUT_FILEPATH, 'r')
         signal = spf.readframes(-1)
-        signal = np.fromstring(signal, 'Int16')
+        signal = np.fromstring(signal, np.int32)
         # A figure instance to plot on.
+
+        fs = spf.getframerate()
+        Time = np.linspace(0, len(signal) / fs, num=len(signal))
 
         self.figureSoundWav = pyqtgraph.PlotWidget()
         self.thirdsub_Layout.addWidget(self.figureSoundWav,2,1)
-        self.figureSoundWav.setYRange(-40000,40000)
         self.figureSoundWav.setTitle('Wav - '+self.WAVE_OUTPUT_FILENAME)
         self.figureSoundWav.setLabel('left','Amplitude (db)')
-        self.figureSoundWav.setLabel('bottom', 'Frame')
-        self.figureSoundWav.plot(signal)
+        self.figureSoundWav.setLabel('bottom', 'Time (sec)')
+        self.figureSoundWav.plot(Time,signal)
+        self.figureSoundWav.setEnabled(False)
+        self.figureSoundWav.getAxis('bottom').enableAutoSIPrefix(False)
+        self.figureSoundWav.getAxis('left').enableAutoSIPrefix(False)
+
 
     # Drawing the MFCC graph..
     def showMfcc(self):
@@ -440,7 +442,8 @@ class Gui_User(QWidget):
         ax.imshow(self.mfccResult, interpolation='nearest', origin='lower', aspect='auto')
 
     def closeThisWindow(self):
-        self.destroy()
+        self.close()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
