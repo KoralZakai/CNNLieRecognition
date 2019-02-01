@@ -90,7 +90,6 @@ class Main_Window(QWidget):
         userGui = Gui_User(self)
         userGui.show()
 
-        
 
 
 if __name__ == '__main__':

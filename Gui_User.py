@@ -366,8 +366,6 @@ class Gui_User(QWidget):
         cnnResult = newCNN.predict(self.mfccResult)
         QMessageBox.information(self, "Results", "Result : "+str(cnnResult[0]))
 
-
-
     # Clearing graphs
     # layoutnum - the layout number that includes the wanted graph to clear.
     def clearGraph(self,layoutnum):
@@ -384,6 +382,7 @@ class Gui_User(QWidget):
                 if child.widget():
                     child.widget().deleteLater()
 
+
     # Drawing sound wave graph.
     def showSoundWav(self ):
         # Clear the sound wave graph.
@@ -391,7 +390,7 @@ class Gui_User(QWidget):
         # Reading wave file frames.
         spf = wave.open(self.WAVE_OUTPUT_FILEPATH, 'r')
         signal = spf.readframes(-1)
-        signal = np.fromstring(signal, np.int32)
+        signal = np.fromstring(signal, np.int16)
         # A figure instance to plot on.
 
         fs = spf.getframerate()
@@ -404,6 +403,7 @@ class Gui_User(QWidget):
         self.figureSoundWav.setLabel('bottom', 'Time (sec)')
         self.figureSoundWav.plot(Time,signal)
         self.figureSoundWav.setEnabled(False)
+        self.figureSoundWav.setYRange(-32000,32000)
         self.figureSoundWav.getAxis('bottom').enableAutoSIPrefix(False)
         self.figureSoundWav.getAxis('left').enableAutoSIPrefix(False)
 

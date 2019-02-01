@@ -158,6 +158,7 @@ class Gui_Admin(QWidget):
         myFont.setPixelSize(16)
         self.text_edit = QtWidgets.QTextEdit("")
         self.text_edit.setStyleSheet("color:black")
+        self.text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.text_edit.setFont(myFont)
         self.text_edit.setEnabled(False)
         lbl = QtWidgets.QLabel("Log:")
