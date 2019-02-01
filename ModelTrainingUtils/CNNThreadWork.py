@@ -10,22 +10,18 @@ class CNNThreadWork(Thread):
         super().__init__()
         self.app = app
         self.CNN_model = CNN
-        self.isRun=False
+        self.is_run = False
 
     def stopThread(self):
-        self.isRun = False
-        self.CNN_model.set_running_status(self.isRun)
+        self.is_run = False
+        self.CNN_model.set_running_status(self.is_run)
 
     def run(self):
-        self.isRun = True
-        print("creating dataset")
-        self.CNN_model.set_running_status(self.isRun)
-        if self.isRun:
-            self.app.logText.emit("creating dataset")
-            self.CNN_model.createDataSet()
-        if self.isRun:
-            self.app.logText.emit("train model")
-            self.CNN_model.trainModel()
-            self.app.logText.emit("Finished")
-        if self.isRun:
-            self.app.showMessageBox.emit('Finished')
+        self.is_run = True
+        self.CNN_model.set_running_status(self.is_run)
+        self.app.logText.emit("creating dataset...")
+        self.CNN_model.createDataSet()
+        self.app.logText.emit("train model...")
+        self.CNN_model.trainModel()
+        self.app.logText.emit("Finished training model")
+        self.app.showMessageBox.emit('Finished')

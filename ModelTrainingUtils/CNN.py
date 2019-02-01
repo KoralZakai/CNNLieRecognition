@@ -33,7 +33,7 @@ class CNN():
     # learn_rate - controls how much we are adjusting the weights of our network
     # optimizer - optimizer for model could be one of ('sgd','adam','rmsprop')
     # column_nbr - number of columns in the input data minimum 32
-    def __init__(self, output, model=None, calback_func=None, batch_size=10, train_perc=0.8, epoch_nbr=10, learn_rate=0.001, optimizer='adam', column_nbr=32):
+    def __init__(self, output=None, model=None, calback_func=None, batch_size=10, train_perc=0.8, epoch_nbr=10, learn_rate=0.001, optimizer='adam', column_nbr=32):
         super().__init__()
         self.isRun = False
         self.AccuracyCallback = calback_func

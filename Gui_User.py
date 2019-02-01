@@ -442,6 +442,7 @@ class Gui_User(QWidget):
 
     def closeThisWindow(self):
         self.parent().show()
+        self.parent().main_frame.setVisible(True)
         self.close()
 
 if __name__ == '__main__':

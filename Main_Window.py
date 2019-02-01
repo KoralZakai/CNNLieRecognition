@@ -85,10 +85,12 @@ class Main_Window(QWidget):
     def openAdminGui(self):
         adminGui = Gui_Admin(self)
         adminGui.show()
+        self.main_frame.setVisible(False)
 
     def openUserGui(self):
         userGui = Gui_User(self)
         userGui.show()
+        self.main_frame.setVisible(False)
 
 
 
