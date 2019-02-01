@@ -3,7 +3,10 @@
   padding: 20px; 
   width: 200px;
 box-shadow: 10px 10px 8px #888888;
-  height: 150px; }
+  height: 150px;
+-webkit-box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
+-moz-box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
+box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);  }
 
 #MainFrame {
 	background-image: url("bg.png");
@@ -12,6 +15,7 @@ box-shadow: 10px 10px 8px #888888;
 
 QLabel { 
 	color:#019ad2;
+	font-size: 22px;
 
 }
 #Buttons {background-color:#33bdef;

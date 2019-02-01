@@ -77,7 +77,7 @@ class Gui_User(QWidget):
 
         #Setting up the form fields
         #form title init
-        self.formTitleLbl = QtWidgets.QLabel('Lie Detection')
+        self.formTitleLbl = QtWidgets.QLabel('Lie Detector')
         self.formTitleLbl.setAlignment(Qt.AlignCenter)
         self.formTitleLbl.setContentsMargins(0,0,0,20)
         myFont = QtGui.QFont()

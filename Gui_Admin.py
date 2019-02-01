@@ -50,7 +50,7 @@ class Gui_Admin(QWidget):
         self.text_edit.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S')+" : " +log_text)
 
     def _initModelDefaultParams(self):
-        self.defaultDict = {'Batch size': 20, 'Learning Rate': 0.01, 'Epoch Number': 1, 'Column Number': 32}
+        self.defaultDict = {'Batch size': 20, 'Learning Rate': 0.01, 'Epoch Number': 1, 'Filter Number': 32}
         self.comboText = 'sgd'
         self.train_percent = 0.8
 
@@ -145,11 +145,9 @@ class Gui_Admin(QWidget):
         form_layout.addRow(train_percentScale)
 
         btnLayout = QtWidgets.QHBoxLayout()
-        self.btnBack = QtWidgets.QPushButton("Back")
         self.btnStartLearnPhase = QtWidgets.QPushButton("Start")
         self.btnStartLearnPhase.setFixedWidth(150)
-        self.btnBack.setFixedWidth(150)
-        btnLayout.addWidget(self.btnBack)
+        self.btnStartLearnPhase.setObjectName("Buttons")
         btnLayout.addWidget(self.btnStartLearnPhase)
         first_sub_layout.addLayout(btnLayout)
         self.btnStartLearnPhase.clicked.connect(lambda: self.learnPhase())
@@ -196,28 +194,47 @@ class Gui_Admin(QWidget):
         train_percentLbl.setText('Training percent =  ' + str(learnRateScale.value()) + '%')
 
     def learnPhase(self):
+        #Batch size  =  0 < x < infinty (int)
+        #Learning rate =  0 < x < 1
+        #Epoch number = 0 < x < infinty (int)
+        #feature number = Filter numbers =  31 < x < 226
+
         try:
             if self.btnStartLearnPhase.text() == "Start":
-                self.btnStartLearnPhase.setText("Cancel")
+
                 batch_size = int(self.arrTxt[Feature.BATCH_SIZE].toPlainText())
                 learning_rate = float(self.arrTxt[Feature.LEARN_RATE].toPlainText())
                 epoch_nbr = int(self.arrTxt[Feature.EPOCH_NBR].toPlainText())
                 feature_nbr = int(self.arrTxt[Feature.FEATURE_NBR].toPlainText())
-                self.init_graph_by_params(epoch_nbr)
-                displayGraph = AccuracyHistory(self.graph_arr,self.graph_frame,self.logText)
-                self.CNN_model = CNN(output=self.logText,
-                                     calback_func =displayGraph,
-                                     batch_size=batch_size,
-                                     train_perc=self.train_percent,
-                                     epoch_nbr=epoch_nbr,
-                                     column_nbr=feature_nbr,
-                                     optimizer=self.comboText,
-                                     learn_rate=learning_rate)
-                self.graph_frame.setVisible(True)
-                self.CNNThread = CNNThreadWork(self,self.CNN_model)
-                self.CNNThread.daemon = True
-                self.CNNThread.start()
-                self.text_edit.setText("")
+                exceptionMsg = ""
+                if batch_size <= 0:
+                    exceptionMsg = exceptionMsg + "Batch size must be positive number.\n"
+                if learning_rate >= 1 or learning_rate <= 0:
+                    exceptionMsg = exceptionMsg + "Learn rate must be between 0 and 1.\n"
+                if epoch_nbr <= 0:
+                    exceptionMsg = exceptionMsg + "Epoch number must be positive number.\n"
+                if feature_nbr > 225 or feature_nbr < 32:
+                    exceptionMsg = exceptionMsg + "Filter number must be between 32 and 225.\n"
+                if len(exceptionMsg) == 0:
+                    #everything is good
+                    self.btnStartLearnPhase.setText("Cancel")
+                    self.init_graph_by_params(epoch_nbr)
+                    displayGraph = AccuracyHistory(self.graph_arr,self.graph_frame,self.logText)
+                    self.CNN_model = CNN(output=self.logText,
+                                         calback_func =displayGraph,
+                                         batch_size=batch_size,
+                                         train_perc=self.train_percent,
+                                         epoch_nbr=epoch_nbr,
+                                         column_nbr=feature_nbr,
+                                         optimizer=self.comboText,
+                                         learn_rate=learning_rate)
+                    self.graph_frame.setVisible(True)
+                    self.CNNThread = CNNThreadWork(self,self.CNN_model)
+                    self.CNNThread.daemon = True
+                    self.CNNThread.start()
+                    self.text_edit.setText("")
+                else:
+                    QMessageBox.information(self, "Warning", exceptionMsg)
             else:
                 self.CNNThread.stopThread()
                 self.CNNThread.join()
