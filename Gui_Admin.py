@@ -4,8 +4,8 @@ import signal
 from multiprocessing.pool import ThreadPool, Pool
 from tkinter import *
 from datetime import datetime
-from PyQt5.QtGui import QIcon, QColor
-from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox,QDialog
+from PyQt5.QtGui import QIcon, QColor, QTextCursor
+from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QDialog, QSizePolicy
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore
@@ -158,9 +158,8 @@ class Gui_Admin(QWidget):
         myFont.setPixelSize(16)
         self.text_edit = QtWidgets.QTextEdit("")
         self.text_edit.setStyleSheet("color:black")
-        self.text_edit.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
         self.text_edit.setFont(myFont)
-        self.text_edit.setEnabled(False)
+        self.text_edit.setReadOnly(True)
         lbl = QtWidgets.QLabel("Log:")
         lbl.setAlignment(Qt.AlignCenter)
         lbl.setStyleSheet("font-size:32px bold")

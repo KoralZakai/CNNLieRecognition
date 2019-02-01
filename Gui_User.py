@@ -88,6 +88,7 @@ class Gui_User(QWidget):
         #init the browse file fields - lable , textfield, file browse button , start/stop record buttons
         fileBrowseHBoxLayout = QtWidgets.QGridLayout()
         self.fileBrowserTxt=QtWidgets.QTextEdit("", self)
+        self.fileBrowserTxt.setReadOnly(True)
         self.fileBrowserLbl=QtWidgets.QLabel('Pick Wav File', self)
         myFont.setPixelSize(18)
         self.fileBrowserLbl.setFont(myFont)
