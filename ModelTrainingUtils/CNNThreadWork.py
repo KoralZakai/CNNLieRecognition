@@ -14,6 +14,7 @@ class CNNThreadWork(Thread):
 
     def stopThread(self):
         self.isRun = False
+        self.CNN_model.set_running_status(self.isRun)
 
     def run(self):
         self.isRun = True

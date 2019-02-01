@@ -217,6 +217,7 @@ class Gui_Admin(QWidget):
                 self.CNNThread = CNNThreadWork(self,self.CNN_model)
                 self.CNNThread.daemon = True
                 self.CNNThread.start()
+                self.text_edit.setText("")
             else:
                 self.CNNThread.stopThread()
                 self.CNNThread.join()
