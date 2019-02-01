@@ -85,11 +85,13 @@ class Main_Window(QWidget):
     def openAdminGui(self):
         adminGui = Gui_Admin()
         adminGui.show()
-
+        self.close()
 
     def openUserGui(self):
         userGui = Gui_User()
         userGui.show()
+        self.close()
+        
 
 
 if __name__ == '__main__':

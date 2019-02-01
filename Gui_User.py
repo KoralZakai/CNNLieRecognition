@@ -15,7 +15,6 @@ from PyQt5.QtCore import Qt
 import pyqtgraph
 from ModelTrainingUtils.CNN import *
 import ctypes
-from Main_Window import Main_Window
 class Gui_User(QWidget):
     def __init__(self, parent=None):
         super(Gui_User, self).__init__(parent)
