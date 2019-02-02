@@ -4,7 +4,7 @@ import signal
 from multiprocessing.pool import ThreadPool, Pool
 from tkinter import *
 from datetime import datetime
-from PyQt5.QtGui import QIcon, QColor, QTextCursor
+from PyQt5.QtGui import QIcon, QColor, QTextCursor, QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QDialog, QSizePolicy
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import Qt
@@ -78,7 +78,7 @@ class Gui_Admin(QWidget):
         main_layout.addWidget(title_frame,0,1,1,1)
 
         formTitleLbl = QtWidgets.QLabel('Admin Management Settings')
-
+        formTitleLbl.setObjectName("LableHeader")
         title_layout.addWidget(formTitleLbl)
 
         first_sub_frame = QtWidgets.QFrame(main_frame)
@@ -100,6 +100,13 @@ class Gui_Admin(QWidget):
         self.graph_frame = QtWidgets.QFrame(main_frame)
         self.graph_frame.setFixedWidth(self.width*2/3)
         self.graph_layout = QtWidgets.QGridLayout(self.graph_frame)
+
+        logo = QtWidgets.QLabel('', self)
+        pixmap = QPixmap(os.getcwd() + '\Pictures\logo.png')
+        logo.setPixmap(pixmap)
+        logo.setAlignment(Qt.AlignCenter)
+        self.graph_layout.addWidget(logo)
+
         main_layout.addWidget(self.graph_frame,1,1,2,2)
 
         graphNames = ["Accuracy Epoch",
@@ -107,8 +114,8 @@ class Gui_Admin(QWidget):
                       "Accuracy Batch",
                       "Loss Batch"]
         self.graph_arr = []
-        self.graph_frame.setVisible(False)
-        j=0
+        #self.graph_frame.setVisible(False)
+        """j=0
         for i in range(4):
             self.graph_arr.append(pg.PlotWidget(title=graphNames[i]))
             self.graph_arr[i].showGrid(x=True,y=True)
@@ -120,7 +127,7 @@ class Gui_Admin(QWidget):
             if i in [Graph.ACC_BATCH, Graph.ACC_EPOCH]:
                 self.graph_arr[i].setYRange(0,1)
             else:
-                self.graph_arr[i].setYRange(0, 5)
+                self.graph_arr[i].setYRange(0, 5)"""
 
         myFont = QtGui.QFont()
         myFont.setBold(True)
@@ -201,6 +208,24 @@ class Gui_Admin(QWidget):
 
         try:
             if self.btnStartLearnPhase.text() == "Start":
+                graphNames = ["Accuracy Epoch",
+                              "Loss Epoch",
+                              "Accuracy Batch",
+                              "Loss Batch"]
+                j = 0
+                for i in range(4):
+                    # Building the graphs
+                    self.graph_arr.append(pg.PlotWidget(title=graphNames[i]))
+                    self.graph_arr[i].showGrid(x=True, y=True)
+                    self.graph_arr[i].getAxis('bottom').enableAutoSIPrefix(False)
+                    self.graph_arr[i].getAxis('left').enableAutoSIPrefix(False)
+                    self.graph_layout.addWidget(self.graph_arr[i], j, i % 2, 1, 1)
+                    if i == 1:
+                        j += 1
+                    if i in [Graph.ACC_BATCH, Graph.ACC_EPOCH]:
+                        self.graph_arr[i].setYRange(0, 1)
+                    else:
+                        self.graph_arr[i].setYRange(0, 5)
 
                 batch_size = int(self.arrTxt[Feature.BATCH_SIZE].toPlainText())
                 learning_rate = float(self.arrTxt[Feature.LEARN_RATE].toPlainText())

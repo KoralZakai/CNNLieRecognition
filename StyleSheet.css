@@ -16,7 +16,14 @@ box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);  }
 QLabel { 
 	color:#019ad2;
 	font-size: 22px;
+	font-weight:normal;
 
+}
+
+#LableHeader{
+	color:#019ad2;
+	font-size: 36px;
+	font-weight:normal;
 }
 #Buttons {background-color:#33bdef;
 	-moz-border-radius:6px;
