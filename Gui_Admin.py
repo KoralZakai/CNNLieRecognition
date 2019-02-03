@@ -185,8 +185,8 @@ class Gui_Admin(QWidget):
 
     def _initCombobox(self):
         comboBox = QtWidgets.QComboBox(self)
-        comboBox.addItem("sgd")
         comboBox.addItem("adam")
+        comboBox.addItem("sgd")
         comboBox.addItem("rmsprop")
         comboBox.setFixedWidth(150)
         comboBox.activated[str].connect(self.onActivated)
@@ -213,18 +213,18 @@ class Gui_Admin(QWidget):
                               "Accuracy Batch",
                               "Loss Batch"]
                 j = 0
+                pg.setConfigOption("antialias", True)
                 for i in range(4):
                     # Building the graphs
                     self.graph_arr.append(pg.PlotWidget(title=graphNames[i]))
                     self.graph_arr[i].showGrid(x=True, y=True)
                     self.graph_arr[i].getAxis('bottom').enableAutoSIPrefix(False)
                     self.graph_arr[i].getAxis('left').enableAutoSIPrefix(False)
+                    self.graph_arr[i].setEnabled(False)
                     self.graph_layout.addWidget(self.graph_arr[i], j, i % 2, 1, 1)
                     if i == 1:
                         j += 1
-                    if i in [Graph.ACC_BATCH, Graph.ACC_EPOCH]:
-                        self.graph_arr[i].setYRange(0, 1)
-                    else:
+                    if i in [Graph.LOSS_EPOCH, Graph.LOSS_BATCH]:
                         self.graph_arr[i].setYRange(0, 5)
 
                 batch_size = int(self.arrTxt[Feature.BATCH_SIZE].toPlainText())

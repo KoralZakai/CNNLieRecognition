@@ -239,4 +239,4 @@ class CNN():
                                                   embeddings_metadata=None,
                                                   embeddings_data=None,
                                                   update_freq='epoch')
-        return [tensorBoard, earlyStop]  # , self.AccuracyCallback]
+        return [tensorBoard, earlyStop, self.AccuracyCallback]

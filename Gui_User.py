@@ -409,7 +409,7 @@ class Gui_User(QWidget):
         self.figureSoundWav = pyqtgraph.PlotWidget()
         self.thirdsub_Layout.addWidget(self.figureSoundWav,2,1)
         self.figureSoundWav.setTitle('Wav - '+self.WAVE_OUTPUT_FILENAME)
-        self.figureSoundWav.setLabel('left','Amplitude (db)')
+        self.figureSoundWav.setLabel('left','AmpsetEnabledlitude (db)')
         self.figureSoundWav.setLabel('bottom', 'Time (sec)')
         self.figureSoundWav.plot(Time,signal)
         self.figureSoundWav.setEnabled(False)

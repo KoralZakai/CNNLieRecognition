@@ -43,6 +43,7 @@ class AccuracyHistory(Callback):
         thread_acc.start()
         thread_loss.start()
 
+
     def on_batch_end(self, batch, logs=None):
         self.index_on_batch += 1
         self.index_log_on_batch.append(self.index_on_batch)
@@ -53,3 +54,5 @@ class AccuracyHistory(Callback):
         self.log_print.emit("acc: {} loss:{}".format(logs.get('acc'),logs.get('loss')))
         thread_acc.start()
         thread_loss.start()
+        thread_acc.join()
+        thread_loss.join()
