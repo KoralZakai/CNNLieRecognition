@@ -1,13 +1,15 @@
+
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QApplication, QWidget
-from PyQt5 import QtGui, QtWidgets, uic
-import sys
-from PyQt5.QtCore import Qt
+from PyQt5 import QtWidgets
+from PyQt5.QtCore import Qt, QFile, QTextCodec, QTextStream
 from ModelTrainingUtils.CNN import *
 import ctypes
 from Gui_Admin import Gui_Admin
 from Gui_User import Gui_User
-
+#don't delete using python files with image and css source
+import design
+import css
 
 class Main_Window(QWidget):
     def __init__(self, parent=None):
@@ -24,9 +26,13 @@ class Main_Window(QWidget):
 
 
     def initUI(self):
-        self.setStyleSheet(open('StyleSheet.css').read())
+        file = QFile(':css/StyleSheet.css')
+        file.open(QFile.ReadOnly)
+        stream = QTextStream(file)
+        text = stream.readAll()
+        self.setStyleSheet(text)
         self.setWindowTitle(self.title)
-        self.setWindowIcon(QIcon(os.getcwd()+'\pictures\logo.png'))
+        self.setWindowIcon(QIcon(":Pictures/logo.png"))
         self.setGeometry(0, 0, self.width, self.height-60)
         #Creating main container-frame, parent it to QWindow
         self.main_frame = QtWidgets.QFrame(self)
@@ -56,7 +62,7 @@ class Main_Window(QWidget):
         #Setting up the fields
 
         logo = QtWidgets.QLabel('',self)
-        pixmap = QPixmap(os.getcwd()+'\Pictures\logo.png')
+        pixmap = QPixmap(":Pictures/logo.png")
         logo.setPixmap(pixmap)
         self.firstsub_Layout.addWidget(logo)
         logo.setAlignment(Qt.AlignCenter)
@@ -95,6 +101,19 @@ class Main_Window(QWidget):
 
 
 if __name__ == '__main__':
+    directory =os.path.dirname(sys.argv[0])
+    if not os.path.exists(directory+"/Model"):
+        os.mkdir(directory + "/Model")
+    if not os.path.exists(directory + "/db"):
+        os.mkdir(directory + "/db")
+    if not os.path.exists(directory+"/db/MFCC"):
+        os.mkdir(directory+"/db/MFCC")
+    if not os.path.exists(directory+"/db/Records"):
+        os.mkdir(directory+"/db/Records")
+    if not os.path.exists(directory+"/db/wav"):
+        os.mkdir(directory+"/db/wav")
+    if not os.path.exists(directory+"/logs"):
+        os.mkdir(directory+"/logs")
     app = QApplication(sys.argv)
     main = Main_Window()
     sys.exit(app.exec_())

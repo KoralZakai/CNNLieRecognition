@@ -1,13 +1,11 @@
 import ctypes
 import os
-import signal
-from multiprocessing.pool import ThreadPool, Pool
 from tkinter import *
 from datetime import datetime
 from PyQt5.QtGui import QIcon, QColor, QTextCursor, QPixmap
 from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QDialog, QSizePolicy
 from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QFile, QTextStream
 from PyQt5 import QtCore
 from ModelTrainingUtils.CNN import CNN as CNN
 import pyqtgraph as pg
@@ -55,8 +53,14 @@ class Gui_Admin(QWidget):
         self.train_percent = 0.8
 
     def _initUI(self):
-        self.setStyleSheet(open('StyleSheet.css').read())
-        self.setWindowIcon(QIcon(os.getcwd() + '\pictures\logo.png'))
+        file = QFile(':css/StyleSheet.css')
+        file.open(QFile.ReadOnly)
+        stream = QTextStream(file)
+        text = stream.readAll()
+        self.setStyleSheet(text)
+
+
+        self.setWindowIcon(QIcon(':Pictures/logo.png'))
         self.setWindowTitle(self.title)
         self.setGeometry(0, 0, self.width, self.height-60)
 
@@ -67,7 +71,7 @@ class Gui_Admin(QWidget):
 
         #Return to main window button
         returnBtn = QtWidgets.QPushButton("", self)
-        returnBtn.setStyleSheet("QPushButton {background: url(Pictures/backimg.png) no-repeat transparent;} ")
+        returnBtn.setStyleSheet("QPushButton {background: url(:Pictures/backimg.png) no-repeat transparent;} ")
         returnBtn.setFixedWidth(110)
         returnBtn.setFixedHeight(110)
         returnBtn.clicked.connect(self.closeThisWindow)
@@ -102,7 +106,7 @@ class Gui_Admin(QWidget):
         self.graph_layout = QtWidgets.QGridLayout(self.graph_frame)
 
         logo = QtWidgets.QLabel('', self)
-        pixmap = QPixmap(os.getcwd() + '\Pictures\logo.png')
+        pixmap = QPixmap(':Pictures/logo.png')
         logo.setPixmap(pixmap)
         logo.setAlignment(Qt.AlignCenter)
         self.graph_layout.addWidget(logo)
@@ -295,8 +299,3 @@ class Gui_Admin(QWidget):
         self.parent().show()
         self.parent().main_frame.setVisible(True)
         self.close()
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    ex = Gui_Admin()
-    sys.exit(app.exec_())

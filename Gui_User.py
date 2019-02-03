@@ -1,20 +1,18 @@
 from matplotlib.figure import Figure
-import scipy.io.wavfile as wav
 from PyQt5.QtGui import QPixmap, QIcon
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from PyQt5.QtWidgets import QApplication, QWidget
-from PyQt5 import QtGui, QtWidgets, uic
+from PyQt5 import QtGui, QtWidgets
 import time
 import wave
 import threading
-import sys
 import pyaudio
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
-import matplotlib.pyplot as plt
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QFile, QTextStream
 import pyqtgraph
 from ModelTrainingUtils.CNN import *
 import ctypes
+
 class Gui_User(QWidget):
     def __init__(self, parent=None):
         super(Gui_User, self).__init__(parent)
@@ -51,17 +49,21 @@ class Gui_User(QWidget):
             QMessageBox.about(self, "Error", self.checkEnvErr)
 
     def initUI(self):
-        self.setStyleSheet(open('StyleSheet.css').read())
+        file = QFile(':css/StyleSheet.css')
+        file.open(QFile.ReadOnly)
+        stream = QTextStream(file)
+        text = stream.readAll()
+        self.setStyleSheet(text)
         self.setObjectName("Windowimg")
         self.setWindowTitle(self.title)
-        self.setWindowIcon(QIcon(os.getcwd()+'\pictures\logo.png'))
+        self.setWindowIcon(QIcon(':Pictures/logo.png'))
         self.setGeometry(0, 0, self.width, self.height-60)
         #Creating main container-frame, parent it to QWindow
         self.main_frame = QtWidgets.QFrame(self)
         self.main_frame.setObjectName("MainFrame")
         #Return to main window button
         returnBtn = QtWidgets.QPushButton("", self)
-        returnBtn.setStyleSheet("QPushButton {background: url(Pictures/backimg.png) no-repeat transparent;} ")
+        returnBtn.setStyleSheet("QPushButton {background: url(:Pictures/backimg.png) no-repeat transparent;} ")
         returnBtn.setFixedWidth(110)
         returnBtn.setFixedHeight(110)
         returnBtn.clicked.connect(self.closeThisWindow)
@@ -104,7 +106,7 @@ class Gui_User(QWidget):
         self.fileBrowserBtn.setMaximumWidth(100)
         self.fileBrowserBtn.setFixedHeight(27)
         self.fileBrowserBtn.setFixedWidth(27)
-        self.fileBrowserBtn.setStyleSheet("QPushButton {background: url(Pictures/filebrowse.png) no-repeat transparent;} ")
+        self.fileBrowserBtn.setStyleSheet("QPushButton {background: url(:Pictures/filebrowse.png) no-repeat transparent;} ")
         self.fileBrowserBtn.clicked.connect(lambda: self.openFile(self.firstsub_Layout))
         fileBrowseHBoxLayout.addWidget(self.fileBrowserLbl,1,0)
         fileBrowseHBoxLayout.addWidget(self.fileBrowserTxt,1,1)
@@ -115,7 +117,7 @@ class Gui_User(QWidget):
         self.startRecordBtn = QtWidgets.QPushButton("", self)
         self.startRecordBtn.setFixedHeight(25)
         self.startRecordBtn.setFixedWidth(25)
-        self.startRecordBtn.setStyleSheet("QPushButton {background: url(Pictures/microphone1.png) no-repeat transparent;} ")
+        self.startRecordBtn.setStyleSheet("QPushButton {background: url(:Pictures/microphone1.png) no-repeat transparent;} ")
         self.recordingLbl = QtWidgets.QLabel('Recording', self)
         self.recordingLbl.setContentsMargins(self.height/2,self.width/2,50,50)
         self.recordingLbl.setVisible(False)
@@ -125,7 +127,7 @@ class Gui_User(QWidget):
         self.loadingLbl.setFixedWidth(200)
         self.loadingLbl.setFixedHeight(25)
         self.stopRecordBtn = QtWidgets.QPushButton("", self)
-        self.stopRecordBtn.setStyleSheet("QPushButton {background: url(Pictures/microphone2.png) no-repeat transparent;} ")
+        self.stopRecordBtn.setStyleSheet("QPushButton {background: url(:Pictures/microphone2.png) no-repeat transparent;} ")
         self.stopRecordBtn.setVisible(False)
         self.stopRecordBtn.setFixedWidth(25)
         self.stopRecordBtn.setFixedHeight(25)
@@ -161,7 +163,7 @@ class Gui_User(QWidget):
         self.thirdsub_Frame.setFixedHeight(self.height/1.8)
 
         logo = QtWidgets.QLabel('', self)
-        pixmap = QPixmap(os.getcwd() + '\Pictures\logo.png')
+        pixmap = QPixmap(':Pictures/logo.png')
         logo.setPixmap(pixmap)
         self.thirdsub_Layout.addWidget(logo)
         logo.setAlignment(Qt.AlignCenter)
@@ -212,7 +214,7 @@ class Gui_User(QWidget):
             self.checkEnvErr = "Microphone is missing, please plugin you'r microphone"
 
         # Checking existing models
-        modelPath = os.path.dirname(os.path.realpath(__file__)) + "\\Model\\"
+        modelPath = os.path.dirname(os.path.realpath(sys.argv[0])) + "\\Model\\"
         modelDir = os.listdir(modelPath)
         if len(modelDir) == 0:
             self.checkEnv = False
@@ -236,7 +238,7 @@ class Gui_User(QWidget):
         self.comboboxModel.setFixedHeight(25)
         self.comboboxModel.activated[str].connect(self.onActivatedComboBoxModel)
 
-        modelPath = os.path.dirname(os.path.realpath(__file__)) + "\\Model\\"
+        modelPath = os.path.dirname(os.path.realpath(sys.argv[0])) + "\\Model\\"
         first = True
         for modelname in os.listdir(modelPath):
             if modelname.endswith('.h5'):
@@ -257,7 +259,7 @@ class Gui_User(QWidget):
 
 
     def onActivatedComboBoxModel(self, text):
-        self.pickedModelPath = os.path.dirname(os.path.realpath(__file__)) + "\\Model\\"+text+'.h5'
+        self.pickedModelPath = os.path.dirname(os.path.realpath(sys.argv[0])) + "\\Model\\"+text+'.h5'
 
     def initSettings(self):
         self.clearGraph(3)
@@ -294,7 +296,7 @@ class Gui_User(QWidget):
                         input=True,
                         frames_per_buffer=self.CHUNK)
         print("* recording")
-        self.movie = QtGui.QMovie("Pictures/loading2.gif")
+        self.movie = QtGui.QMovie(":Pictures/loading2.gif")
         self.loadingLbl.setMovie(self.movie)
         self.movie.start()
         self.loadingLbl.setVisible(True)
@@ -315,7 +317,7 @@ class Gui_User(QWidget):
 
     # Playing the waiting GIF
     def startWaitingGif(self):
-        self.movieGraphWait = QtGui.QMovie("Pictures/loading2.gif")
+        self.movieGraphWait = QtGui.QMovie(":Pictures/loading2.gif")
         loadingGraphLbl = QtWidgets.QLabel('', self)
         loadingGraphLbl.setMaximumHeight(100)
         loadingGraphLbl.setMaximumWidth(100)
@@ -338,7 +340,7 @@ class Gui_User(QWidget):
         # Saving the wav file.
         self.WAVE_OUTPUT_FILENAME = time.strftime("%Y%m%d-%H%M%S")
         self.WAVE_OUTPUT_FILENAME = self.WAVE_OUTPUT_FILENAME + ".wav"
-        path = os.path.dirname(os.path.realpath(__file__))+"\\db\\"
+        path = os.path.dirname(os.path.realpath(sys.argv[0]))+"\\db\\"
         if not os.path.exists(path+"\\Records"):
             os.mkdir(path+"\\Records")
         wf = wave.open("db\\Records\\"+self.WAVE_OUTPUT_FILENAME, 'wb')
@@ -349,7 +351,7 @@ class Gui_User(QWidget):
         wf.close()
         # Adding the file name to the file browser text field.
         self.fileBrowserTxt.setText(self.WAVE_OUTPUT_FILENAME)
-        self.WAVE_OUTPUT_FILEPATH=os.path.dirname(os.path.realpath(__file__)) + "\\db\\Records\\" + self.WAVE_OUTPUT_FILENAME
+        self.WAVE_OUTPUT_FILEPATH=os.path.dirname(os.path.realpath(sys.argv[0])) + "\\db\\Records\\" + self.WAVE_OUTPUT_FILENAME
 
         # Processing the input file.
         self.dataProcessing()
@@ -454,8 +456,3 @@ class Gui_User(QWidget):
         self.parent().show()
         self.parent().main_frame.setVisible(True)
         self.close()
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    main = Gui_User()
-    sys.exit(app.exec_())

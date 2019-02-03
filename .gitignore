@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 *$py.class
 logs/
+.idea/dictionaries/Home_PC.xml
 # C extensions
 *.so
 db/MFCC
