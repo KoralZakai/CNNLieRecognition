@@ -50,8 +50,8 @@ class Gui_Admin(QWidget):
         self.text_edit.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S')+" : " +log_text)
 
     def _initModelDefaultParams(self):
-        self.defaultDict = {'Batch size': 20, 'Learning Rate': 0.01, 'Epoch Number': 1, 'Column Number': 32}
-        self.comboText = 'sgd'
+        self.defaultDict = {'Batch size': 10, 'Learning Rate': 0.0001, 'Epoch Number': 30, 'Column Number': 32}
+        self.comboText = 'adam'
         self.train_percent = 0.8
 
     def _initUI(self):
