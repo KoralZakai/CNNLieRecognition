@@ -44,13 +44,11 @@ class Gui_User(QWidget):
         self.pickedModelPath = None
         self.checkEnv = True
         self.checkEnvErr = None
-
         self.checkEnvironment()
         if self.checkEnv:
             self.initUI()
         else:
             QMessageBox.about(self, "Error", self.checkEnvErr)
-
 
     def initUI(self):
         self.setStyleSheet(open('StyleSheet.css').read())
@@ -68,6 +66,8 @@ class Gui_User(QWidget):
         returnBtn.setFixedHeight(110)
         returnBtn.clicked.connect(self.closeThisWindow)
 
+
+
         #the first sub window
         self.main_layout = QtWidgets.QVBoxLayout(self.main_frame)
         self.firstsub_Frame = QtWidgets.QFrame(self.main_frame)
@@ -75,19 +75,23 @@ class Gui_User(QWidget):
         self.firstsub_Layout = QtWidgets.QFormLayout(self.firstsub_Frame)
 
 
+
         #Setting up the form fields
         #form title init
-        self.formTitleLbl = QtWidgets.QLabel('Lie Detection')
-        self.formTitleLbl.setAlignment(Qt.AlignCenter)
-        self.formTitleLbl.setContentsMargins(0,0,0,20)
+        self.formTitleLbl = QtWidgets.QLabel('Lie Detector')
         myFont = QtGui.QFont()
         myFont.setBold(True)
         myFont.setPixelSize(25)
-        self. formTitleLbl.setFont(myFont)
+        self.formTitleLbl.setFont(myFont)
+        self.formTitleLbl.setAlignment(Qt.AlignCenter)
+        self.formTitleLbl.setContentsMargins(0,0,50,20)
+        self.formTitleLbl.setObjectName("LableHeader")
+
         self.firstsub_Layout.addRow(self.formTitleLbl)
         #init the browse file fields - lable , textfield, file browse button , start/stop record buttons
         fileBrowseHBoxLayout = QtWidgets.QGridLayout()
         self.fileBrowserTxt=QtWidgets.QTextEdit("", self)
+        self.fileBrowserTxt.setReadOnly(True)
         self.fileBrowserLbl=QtWidgets.QLabel('Pick Wav File', self)
         myFont.setPixelSize(18)
         self.fileBrowserLbl.setFont(myFont)
@@ -116,7 +120,7 @@ class Gui_User(QWidget):
         self.recordingLbl.setContentsMargins(self.height/2,self.width/2,50,50)
         self.recordingLbl.setVisible(False)
         self.recordingLbl.setFixedWidth(100)
-        self.recordingLbl.setFixedHeight(25)
+        self.recordingLbl.setFixedHeight(40)
         self.loadingLbl = QtWidgets.QLabel('', self)
         self.loadingLbl.setFixedWidth(200)
         self.loadingLbl.setFixedHeight(25)
@@ -135,7 +139,7 @@ class Gui_User(QWidget):
         self.main_layout.addWidget(self.secondsub_Frame)
         self.secondsub_Layout = QtWidgets.QFormLayout(self.secondsub_Frame)
         self.secondsub_Frame.setFixedWidth(self.width)
-        self.secondsub_Frame.setFixedHeight(30)
+        self.secondsub_Frame.setFixedHeight(50)
         self.secondsub_Layout.addRow(self.recordingLbl,self.loadingLbl)
         self.secondsub_Frame.setContentsMargins(self.width/2-self.recordingLbl.width(),0,0,0)
 
@@ -155,6 +159,12 @@ class Gui_User(QWidget):
         self.thirdsub_Layout = QtWidgets.QGridLayout(self.thirdsub_Frame)
         self.thirdsub_Frame.setFixedWidth(self.width-25)
         self.thirdsub_Frame.setFixedHeight(self.height/1.8)
+
+        logo = QtWidgets.QLabel('', self)
+        pixmap = QPixmap(os.getcwd() + '\Pictures\logo.png')
+        logo.setPixmap(pixmap)
+        self.thirdsub_Layout.addWidget(logo)
+        logo.setAlignment(Qt.AlignCenter)
 
         # the 4rth sub window
         self.fourthsub_Frame = QtWidgets.QFrame(self.main_frame)
@@ -214,7 +224,7 @@ class Gui_User(QWidget):
             self.comboBoxCoef.addItem(str(i))
         self.comboBoxCoef.activated[str].connect(self.onActivatedComboBoxCoef)
         self.comboBoxCoefLbl = QtWidgets.QLabel('Coefficients')
-        self.comboBoxCoefLbl.setFixedWidth(75)
+        self.comboBoxCoefLbl.setFixedWidth(125)
         self.comboBoxCoefLbl.setFixedHeight(25)
         self.comboBoxCoef.setFixedWidth(130)
         self.comboBoxCoef.setFixedHeight(25)
