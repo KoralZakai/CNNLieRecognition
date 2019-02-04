@@ -53,4 +53,4 @@ class AccuracyHistory(Callback):
         self.logs[Graph.LOSS_BATCH].append(avg_loss)
         self.draw.emit(self.graph_arr[Graph.ACC_BATCH], self.logs[Graph.ACC_BATCH], self.index_log_on_batch)
         self.draw.emit(self.graph_arr[Graph.LOSS_BATCH], self.logs[Graph.LOSS_BATCH], self.index_log_on_batch)
-        self.log_print.emit("acc: {0:.4f} loss:{0:.4f}".format(avg_acc, avg_loss))
+        self.log_print.emit("acc: {0:.4f} loss:{1:.4f}".format(avg_acc, avg_loss))

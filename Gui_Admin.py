@@ -30,6 +30,7 @@ class Gui_Admin(QWidget):
 
     def __init__(self,parent=None):
         super(Gui_Admin, self).__init__(parent)
+        self.show
         self.queue = mp.Queue()
         user32 = ctypes.windll.user32
         user32.SetProcessDPIAware()
