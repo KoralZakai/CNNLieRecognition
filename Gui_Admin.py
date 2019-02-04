@@ -1,5 +1,6 @@
 import ctypes
 import os
+from functools import reduce
 from tkinter import *
 from datetime import datetime
 from PyQt5.QtGui import QIcon, QColor, QTextCursor, QPixmap
@@ -12,7 +13,8 @@ import pyqtgraph as pg
 import multiprocessing as mp
 from ModelTrainingUtils.AccuracyHistory import AccuracyHistory, Graph
 from ModelTrainingUtils.CNNThreadWork import CNNThreadWork
-
+from scipy.signal import savgol_filter
+import numpy as np
 
 class Feature():
     BATCH_SIZE = 0
@@ -24,6 +26,8 @@ class Feature():
 class Gui_Admin(QWidget):
     logText = QtCore.pyqtSignal(str)
     showMessageBox = QtCore.pyqtSignal(str)
+    draw_plot = QtCore.pyqtSignal(pg.PlotWidget, list, list)
+
     def __init__(self,parent=None):
         super(Gui_Admin, self).__init__(parent)
         self.queue = mp.Queue()
@@ -41,8 +45,15 @@ class Gui_Admin(QWidget):
         self._initModelDefaultParams()
         self._initUI()
         self.showMessageBox.connect(self.on_show_message_box)
+        self.draw_plot.connect(self.draw_graph)
         self.logText.connect(self._show_log)
         self.CNNThread = None
+
+
+    def draw_graph(self,graph, y, x):
+        graph.clear()
+        graph.plot(x, y, pen='r', name='blue')
+        QApplication.processEvents()
 
     def _show_log(self,log_text):
         self.text_edit.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S')+" : " +log_text)
@@ -149,11 +160,11 @@ class Gui_Admin(QWidget):
             form_layout.addRow(arrLbl[i], self.arrTxt[i])
             i += 1
 
-        lblComboBox, comboBox = self._initCombobox()
-        form_layout.addRow(lblComboBox,comboBox)
-        train_percentLbl, train_percentScale = self._initSlider()
+        lblComboBox, self.comboBox = self._initCombobox()
+        form_layout.addRow(lblComboBox,self.comboBox)
+        train_percentLbl, self.train_percentScale = self._initSlider()
         form_layout.addRow(train_percentLbl)
-        form_layout.addRow(train_percentScale)
+        form_layout.addRow(self.train_percentScale)
 
         btnLayout = QtWidgets.QHBoxLayout()
         self.btnStartLearnPhase = QtWidgets.QPushButton("Start")
@@ -244,34 +255,42 @@ class Gui_Admin(QWidget):
                     exceptionMsg = exceptionMsg + "Epoch number must be positive number.\n"
                 if feature_nbr > 225 or feature_nbr < 32:
                     exceptionMsg = exceptionMsg + "Filter number must be between 32 and 225.\n"
-                if len(exceptionMsg) == 0:
-                    #everything is good
-                    self.btnStartLearnPhase.setText("Cancel")
-                    self.init_graph_by_params(epoch_nbr)
-                    displayGraph = AccuracyHistory(self.graph_arr,self.graph_frame,self.logText)
-                    self.CNN_model = CNN(output=self.logText,
-                                         calback_func =displayGraph,
-                                         batch_size=batch_size,
-                                         train_perc=self.train_percent,
-                                         epoch_nbr=epoch_nbr,
-                                         column_nbr=feature_nbr,
-                                         optimizer=self.comboText,
-                                         learn_rate=learning_rate)
-                    self.graph_frame.setVisible(True)
-                    self.CNNThread = CNNThreadWork(self,self.CNN_model)
-                    self.CNNThread.daemon = True
-                    self.CNNThread.start()
-                    self.text_edit.setText("")
-                else:
-                    QMessageBox.information(self, "Warning", exceptionMsg)
+                if len(exceptionMsg) > 0:
+                    raise Exception(exceptionMsg)
+                # training model
+                self.btnStartLearnPhase.setText("Cancel")
+                self.init_graph_by_params()
+                displayGraph = AccuracyHistory(self.graph_arr,self.graph_frame,self.logText, self.draw_plot,epoch_nbr)
+                self.CNN_model = CNN(output=self.logText,
+                                     calback_func =displayGraph,
+                                     batch_size=batch_size,
+                                     train_perc=self.train_percent,
+                                     epoch_nbr=epoch_nbr,
+                                     column_nbr=feature_nbr,
+                                     optimizer=self.comboText,
+                                     learn_rate=learning_rate)
+                self.CNNThread = CNNThreadWork(self,self.CNN_model)
+                self.CNNThread.daemon = True
+                self.CNNThread.start()
+                self.text_edit.setText("")
+                self.changeDisable(True)
             else:
                 self.CNNThread.stopThread()
                 self.CNNThread.join()
                 self.btnStartLearnPhase.setText("Start")
-        except Exception as e:
-            print(e)
+                self.changeDisable(False)
 
-    def init_graph_by_params(self,epoch_nbr):
+        except Exception as e:
+            QMessageBox.information(self, "Warning", e)
+
+    def changeDisable(self,status):
+        for txt in self.arrTxt:
+            txt.setDisabled(status)
+        self.comboBox.setDisabled(status)
+        self.train_percentScale.setDisabled(status)
+        self.graph_frame.setVisible(status)
+
+    def init_graph_by_params(self):
         for lbl in [Graph.ACC_EPOCH, Graph.ACC_BATCH]:
             self.graph_arr[lbl].setLabel('bottom', 'Epoch number', units='times')
             self.graph_arr[lbl].setLabel('left', 'Accuracy', units='%')
@@ -283,12 +302,13 @@ class Gui_Admin(QWidget):
         if res == 'Finished':
             buttonReply = QMessageBox.question(self, 'System message', "Do you want to save model?",
                                        QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-            self.text_edit.setText("")
         if buttonReply == QMessageBox.Yes:
             path = self.file_save()
             QMessageBox.information(self, "Success", "The file has been saved to:\r\n {}.h5".format(path))
-            return
-        QMessageBox.information(self, "Cancel", "The file was not saved")
+        else:
+            QMessageBox.information(self, "Cancel", "The file was not saved")
+        self.btnStartLearnPhase.setText("Start")
+        self.graph_frame.setVisible(False)
 
     def file_save(self):
         path, _ = QtGui.QFileDialog.getSaveFileName(self, 'Save File')

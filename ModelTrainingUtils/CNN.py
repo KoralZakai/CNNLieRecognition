@@ -38,7 +38,7 @@ class CNN():
     # column_nbr - number of columns in the input data minimum 32
     def __init__(self, output=None, model=None, calback_func=None, batch_size=10, train_perc=0.8, epoch_nbr=10,
                  learn_rate=0.001, optimizer='adam', column_nbr=32, name=None):
-        super().__init__()
+        super(CNN, self).__init__()
         self.name = name
         self.isRun = False
         self.AccuracyCallback = calback_func
@@ -118,6 +118,8 @@ class CNN():
         self.test_data = np.zeros((len(test_files), 3, self.line_nbr, self.column_nbr), dtype=float)
         # run over the data and label each one
         for i in range(len(train_files)):
+            if not self.isRun:
+                break
             for j in range(3):
                 self.train_data[i][j] = np.loadtxt(open("db\\MFCC\\{0}".format(filenames[i]), "rb"), delimiter=",")
             if self.dictionary[filenames[i][5]] == "Fear":
@@ -125,6 +127,8 @@ class CNN():
             else:
                 self.train_label[i] = False
         for i in range(len(test_files)):
+            if not self.isRun:
+                break
             for j in range(3):
                 self.test_data[i][j] = np.loadtxt(open("db\\MFCC\\{0}".format(filenames[i]), "rb"), delimiter=",")
             if self.dictionary[filenames[i][5]] == "Fear":
