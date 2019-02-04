@@ -18,7 +18,6 @@ import os
 import tensorflow as tf
 from keras import backend as K
 from keras.models import load_model
-from sklearn.model_selection import train_test_split
 import random as rnd
 CLASSES_NBR = 2
 VERBOSE = 1
