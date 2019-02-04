@@ -131,8 +131,8 @@ class Gui_User(QWidget):
         self.stopRecordBtn.setVisible(False)
         self.stopRecordBtn.setFixedWidth(25)
         self.stopRecordBtn.setFixedHeight(25)
-        fileBrowseHBoxLayout.addWidget(self.startRecordBtn,1,4)
-        fileBrowseHBoxLayout.addWidget(self.stopRecordBtn,1,4)
+        fileBrowseHBoxLayout.addWidget(self.startRecordBtn, 1, 4)
+        fileBrowseHBoxLayout.addWidget(self.stopRecordBtn, 1, 4)
         recordHBoxLayout.setAlignment(Qt.AlignCenter)
         self.firstsub_Layout.addRow(recordHBoxLayout)
 
