@@ -28,7 +28,7 @@ QLabel {
 #Buttons {background-color:#33bdef;
 	-moz-border-radius:6px;
 	-webkit-border-radius:6px;
-	border-radius:42px;
+	border-radius:15px;
 	border:1px solid #057fd0;
 	display:inline-block;
 	cursor:pointer;

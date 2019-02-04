@@ -15,6 +15,7 @@ from ModelTrainingUtils.AccuracyHistory import AccuracyHistory, Graph
 from ModelTrainingUtils.CNNThreadWork import CNNThreadWork
 from scipy.signal import savgol_filter
 import numpy as np
+from Help_Window import Help_Window
 
 class Feature():
     BATCH_SIZE = 0
@@ -77,15 +78,25 @@ class Gui_Admin(QWidget):
 
         main_frame = QtWidgets.QFrame(self)
         main_layout = QtWidgets.QGridLayout(main_frame)
-        main_frame.setFixedSize(self.width, self.height-100)
+        main_frame.setFixedSize(self.width, self.height)
         main_frame.setObjectName("MainFrame")
 
         #Return to main window button
-        returnBtn = QtWidgets.QPushButton("", self)
+        returnBtn = QtWidgets.QPushButton("")
         returnBtn.setStyleSheet("QPushButton {background: url(:Pictures/backimg.png) no-repeat transparent;} ")
         returnBtn.setFixedWidth(110)
         returnBtn.setFixedHeight(110)
         returnBtn.clicked.connect(self.closeThisWindow)
+
+        # help button
+        helpBtn = QtWidgets.QPushButton("")
+        helpBtn.setStyleSheet("QPushButton {background: url(:Pictures/help.png) no-repeat transparent;} ")
+        helpBtn.setFixedWidth(110)
+        helpBtn.setFixedHeight(110)
+        helpBtn.clicked.connect(self.showHelp)
+
+        buttonsform = QtWidgets.QFormLayout(self)
+        buttonsform.addRow(returnBtn,helpBtn)
 
         title_frame = QtWidgets.QFrame()
         title_layout = QtWidgets.QHBoxLayout(title_frame)
@@ -99,10 +110,13 @@ class Gui_Admin(QWidget):
         first_sub_frame = QtWidgets.QFrame(main_frame)
         first_sub_layout = QtWidgets.QVBoxLayout(first_sub_frame)
         first_sub_frame.setFixedWidth(self.width/3)
+        first_sub_frame.setFixedHeight(self.height/1.2)
         main_layout.addWidget(first_sub_frame,1,0,1,2)
-
         form_frame = QtWidgets.QFrame(first_sub_frame)
         form_frame.setObjectName("FormFrame")
+
+        form_frame.setFixedHeight(self.height/3.5)
+        form_frame.setFixedWidth(first_sub_frame.width()*0.9)
         form_layout = QtWidgets.QFormLayout(form_frame)
         lbl = QtWidgets.QLabel("Parameters")
         lbl.setStyleSheet("font-size:30px bold")
@@ -111,9 +125,9 @@ class Gui_Admin(QWidget):
         first_sub_layout.addWidget(form_frame)
 
 
-
         self.graph_frame = QtWidgets.QFrame(main_frame)
         self.graph_frame.setFixedWidth(self.width*2/3)
+        self.graph_frame.setFixedHeight(self.height*0.8)
         self.graph_layout = QtWidgets.QGridLayout(self.graph_frame)
 
         logo = QtWidgets.QLabel('', self)
@@ -180,12 +194,15 @@ class Gui_Admin(QWidget):
         self.text_edit.setStyleSheet("color:black")
         self.text_edit.setFont(myFont)
         self.text_edit.setReadOnly(True)
+        self.text_edit.setFixedWidth(first_sub_frame.width()*0.9)
+        self.text_edit.setFixedHeight(first_sub_frame.height()*0.45)
         lbl = QtWidgets.QLabel("Log:")
         lbl.setAlignment(Qt.AlignCenter)
         lbl.setStyleSheet("font-size:32px bold")
         first_sub_layout.addWidget(lbl)
         first_sub_layout.addWidget(self.text_edit)
-        self.show()
+        self.showMaximized()
+
 
     def _initSlider(self):
         train_percentLbl = QtWidgets.QLabel('Training percent =  {}%\t'.format(int(self.train_percent*100)))
@@ -319,3 +336,7 @@ class Gui_Admin(QWidget):
         self.parent().show()
         self.parent().main_frame.setVisible(True)
         self.close()
+
+ # Opens help window
+    def showHelp(self):
+        helpWindow = Help_Window(':Pictures/logo.png')
