@@ -1,12 +1,13 @@
 
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt, QFile, QTextCodec, QTextStream
 from ModelTrainingUtils.CNN import *
 import ctypes
 from Gui_Admin import Gui_Admin
 from Gui_User import Gui_User
+from Help_Window import Help_Window
 #don't delete using python files with image and css source
 import design
 import css
@@ -50,6 +51,12 @@ class Main_Window(QWidget):
         self.firstsub_Layout = QtWidgets.QHBoxLayout(self.firstsub_Frame)
         self.firstsub_Layout.setAlignment(Qt.AlignCenter)
 
+        # help button
+        helpBtn = QtWidgets.QPushButton("",self)
+        helpBtn.setStyleSheet("QPushButton {background: url(:Pictures/help.png) no-repeat transparent;} ")
+        helpBtn.setFixedWidth(110)
+        helpBtn.setFixedHeight(110)
+        helpBtn.clicked.connect(self.showHelp)
 
         # The second sub window
         self.secondsub_Frame = QtWidgets.QFrame(self.main_frame)
@@ -69,24 +76,24 @@ class Main_Window(QWidget):
 
         # Admin button
         adminBtn = QtWidgets.QPushButton("Admin Console", self)
-        adminBtn.setObjectName("Buttons")
-        adminBtn.setFixedWidth(300)
-        adminBtn.setFixedHeight(300)
+        adminBtn.setObjectName("MainGuiButtons")
+        #adminBtn.setFixedWidth(300)
+       # adminBtn.setFixedHeight(300)
         adminBtn.clicked.connect(self.openAdminGui)
 
         # User button
         userBtn = QtWidgets.QPushButton("User Console", self)
-        userBtn.setObjectName("Buttons")
-        userBtn.setFixedWidth(300)
-        userBtn.setFixedHeight(300)
+        userBtn.setObjectName("MainGuiButtons")
+        #userBtn.setFixedWidth(300)
+        #userBtn.setFixedHeight(300)
         userBtn.clicked.connect(self.openUserGui)
 
         self.secondsub_Layout.addWidget(adminBtn)
         self.secondsub_Layout.addWidget(userBtn)
 
-
         #show the window
-        self.show()
+        self.showMaximized()
+
 
     def openAdminGui(self):
         adminGui = Gui_Admin(self)
@@ -98,6 +105,9 @@ class Main_Window(QWidget):
         userGui.show()
         self.main_frame.setVisible(False)
 
+# Opens help window
+    def showHelp(self):
+        helpWindow = Help_Window(':Pictures/logo.png')
 
 
 if __name__ == '__main__':

@@ -12,6 +12,7 @@ from PyQt5.QtCore import Qt, QFile, QTextStream
 import pyqtgraph
 from ModelTrainingUtils.CNN import *
 import ctypes
+from Help_Window import Help_Window
 
 class Gui_User(QWidget):
     def __init__(self, parent=None):
@@ -42,11 +43,9 @@ class Gui_User(QWidget):
         self.pickedModelPath = None
         self.checkEnv = True
         self.checkEnvErr = None
-        self.checkEnvironment()
-        if self.checkEnv:
-            self.initUI()
-        else:
-            QMessageBox.about(self, "Error", self.checkEnvErr)
+        self.initUI()
+
+
 
     def initUI(self):
         file = QFile(':css/StyleSheet.css')
@@ -61,13 +60,6 @@ class Gui_User(QWidget):
         #Creating main container-frame, parent it to QWindow
         self.main_frame = QtWidgets.QFrame(self)
         self.main_frame.setObjectName("MainFrame")
-        #Return to main window button
-        returnBtn = QtWidgets.QPushButton("", self)
-        returnBtn.setStyleSheet("QPushButton {background: url(:Pictures/backimg.png) no-repeat transparent;} ")
-        returnBtn.setFixedWidth(110)
-        returnBtn.setFixedHeight(110)
-        returnBtn.clicked.connect(self.closeThisWindow)
-
 
 
         #the first sub window
@@ -77,26 +69,34 @@ class Gui_User(QWidget):
         self.firstsub_Layout = QtWidgets.QFormLayout(self.firstsub_Frame)
 
 
+        # Return to main window button
+        returnBtn = QtWidgets.QPushButton("")
+        returnBtn.setStyleSheet("QPushButton {background: url(:Pictures/backimg.png) no-repeat transparent;} ")
+        returnBtn.setFixedWidth(110)
+        returnBtn.setFixedHeight(110)
+        returnBtn.clicked.connect(self.closeThisWindow)
+
+        # help button
+        helpBtn = QtWidgets.QPushButton("")
+        helpBtn.setStyleSheet("QPushButton {background: url(:Pictures/help.png) no-repeat transparent;} ")
+        helpBtn.setFixedWidth(110)
+        helpBtn.setFixedHeight(110)
+        helpBtn.clicked.connect(self.showHelp)
 
         #Setting up the form fields
         #form title init
         self.formTitleLbl = QtWidgets.QLabel('Lie Detector')
-        myFont = QtGui.QFont()
-        myFont.setBold(True)
-        myFont.setPixelSize(25)
-        self.formTitleLbl.setFont(myFont)
         self.formTitleLbl.setAlignment(Qt.AlignCenter)
-        self.formTitleLbl.setContentsMargins(0,0,50,20)
+        self.formTitleLbl.setContentsMargins(0,0,50,50)
         self.formTitleLbl.setObjectName("LableHeader")
-
+        self.firstsub_Layout.addRow(returnBtn,helpBtn)
         self.firstsub_Layout.addRow(self.formTitleLbl)
+
         #init the browse file fields - lable , textfield, file browse button , start/stop record buttons
         fileBrowseHBoxLayout = QtWidgets.QGridLayout()
         self.fileBrowserTxt=QtWidgets.QTextEdit("", self)
         self.fileBrowserTxt.setReadOnly(True)
         self.fileBrowserLbl=QtWidgets.QLabel('Pick Wav File', self)
-        myFont.setPixelSize(18)
-        self.fileBrowserLbl.setFont(myFont)
         self.fileBrowserTxt.setFixedWidth(500)
         self.fileBrowserTxt.setFixedHeight(25)
         self.fileBrowserLbl.setFixedWidth(150)
@@ -160,7 +160,7 @@ class Gui_User(QWidget):
         self.main_layout.addWidget(self.thirdsub_Frame)
         self.thirdsub_Layout = QtWidgets.QGridLayout(self.thirdsub_Frame)
         self.thirdsub_Frame.setFixedWidth(self.width-25)
-        self.thirdsub_Frame.setFixedHeight(self.height/1.8)
+        self.thirdsub_Frame.setFixedHeight(self.height/2.1)
 
         logo = QtWidgets.QLabel('', self)
         pixmap = QPixmap(':Pictures/logo.png')
@@ -189,7 +189,7 @@ class Gui_User(QWidget):
         self.processGraphsBtn = QtWidgets.QPushButton("Predict", self)
         self.processGraphsBtn.setObjectName("Buttons")
         self.processGraphsBtn.setFixedWidth(131)
-        self.processGraphsBtn.setFixedHeight(25)
+        self.processGraphsBtn.setFixedHeight(30)
         self.processGraphsBtn.clicked.connect(lambda: self.dataProcessingmfcc())
         self.settings_Layout.addRow(self.processGraphsBtn)
 
@@ -197,28 +197,30 @@ class Gui_User(QWidget):
         self.mfccGraphsBtn = QtWidgets.QPushButton("MFCC", self)
         self.mfccGraphsBtn.setObjectName("Buttons")
         self.mfccGraphsBtn.setFixedWidth(131)
-        self.mfccGraphsBtn.setFixedHeight(25)
+        self.mfccGraphsBtn.setFixedHeight(30)
         self.mfccGraphsBtn.clicked.connect(lambda: self.showMfcc())
         self.settings_Layout.addRow(self.mfccGraphsBtn,self.processGraphsBtn)
-
-
 
         #show the window
         self.show()
 
     # Validate that the working environment is safe to work .
-    def checkEnvironment(self):
+    def checkEnvironment(self,type):
+        checkEnv = True
         winmm = ctypes.windll.winmm
-        if winmm.waveInGetNumDevs() != 1:
-            self.checkEnv = False
-            self.checkEnvErr = "Microphone is missing, please plugin you'r microphone"
+        if type == 1:#check microphone
+            if winmm.waveInGetNumDevs() != 1:
+                checkEnv = False
+                self.checkEnvErr = "Microphone is missing, please plugin you'r microphone"
 
         # Checking existing models
         modelPath = os.path.dirname(os.path.realpath(sys.argv[0])) + "\\Model\\"
         modelDir = os.listdir(modelPath)
         if len(modelDir) == 0:
-            self.checkEnv = False
+            checkEnv = False
             self.checkEnvErr = "There is no Models to work with"
+
+        return checkEnv
 
     def buildCoefComboBox(self):
         self.comboBoxCoef = QtWidgets.QComboBox(self)
@@ -269,44 +271,47 @@ class Gui_User(QWidget):
 
     #Opening file browser to import the Wav file.
     def openFile(self,form ):
-        self.initSettings()
-        print()
-        options = QFileDialog.Options()
-        options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getOpenFileName(None, "File Browser", "", "Wav Files (*.wav)", options=options)
-        word = fileName.split('/')
-        word = word[len(word) - 1]
-        if len(word) != 0:
-            if word.endswith('.wav'):
-                self.fileBrowserTxt.setText(''+word)
-                self.WAVE_OUTPUT_FILENAME = word
-                self.WAVE_OUTPUT_FILEPATH = fileName
-                self.dataProcessing()
-            else:
-                QMessageBox.about(form, "Error", "Wrong file type , please use only wav files")
+        if self.checkEnvironment(2):
+            self.initSettings()
+            options = QFileDialog.Options()
+            options |= QFileDialog.DontUseNativeDialog
+            fileName, _ = QFileDialog.getOpenFileName(None, "File Browser", "", "Wav Files (*.wav)", options=options)
+            word = fileName.split('/')
+            word = word[len(word) - 1]
+            if len(word) != 0:
+                if word.endswith('.wav'):
+                    self.fileBrowserTxt.setText(''+word)
+                    self.WAVE_OUTPUT_FILENAME = word
+                    self.WAVE_OUTPUT_FILEPATH = fileName
+                    self.dataProcessing()
+                else:
+                    QMessageBox.about(form, "Error", "Wrong file type , please use only wav files")
+        else:
+            QMessageBox.about(self, "Error", self.checkEnvErr)
 
     #Recording voice using microphone
     def startRecord(self):
-        self.initSettings()
-        self.startRec = True
-        self.pyrecorded = pyaudio.PyAudio()
-        self.stream = self.pyrecorded.open(format=self.FORMAT,
-                        channels=self.CHANNELS,
-                        rate=self.RATE,
-                        input=True,
-                        frames_per_buffer=self.CHUNK)
-        print("* recording")
-        self.movie = QtGui.QMovie(":Pictures/loading2.gif")
-        self.loadingLbl.setMovie(self.movie)
-        self.movie.start()
-        self.loadingLbl.setVisible(True)
-        self.recordingLbl.setVisible(True)
-        self.startRecordBtn.setVisible(False)
-        self.stopRecordBtn.setVisible(True)
-        self.frames = []
-        self.recThread = threading.Thread(target = self.inputData)
-        self.recThread.start()
-
+        if self.checkEnvironment(1):
+            self.initSettings()
+            self.startRec = True
+            self.pyrecorded = pyaudio.PyAudio()
+            self.stream = self.pyrecorded.open(format=self.FORMAT,
+                            channels=self.CHANNELS,
+                            rate=self.RATE,
+                            input=True,
+                            frames_per_buffer=self.CHUNK)
+            self.movie = QtGui.QMovie(":Pictures/loading2.gif")
+            self.loadingLbl.setMovie(self.movie)
+            self.movie.start()
+            self.loadingLbl.setVisible(True)
+            self.recordingLbl.setVisible(True)
+            self.startRecordBtn.setVisible(False)
+            self.stopRecordBtn.setVisible(True)
+            self.frames = []
+            self.recThread = threading.Thread(target = self.inputData)
+            self.recThread.start()
+        else:
+            QMessageBox.about(self, "Error", self.checkEnvErr)
 
     # Input stream of data from the microphone
     def inputData(self):
@@ -451,6 +456,11 @@ class Gui_User(QWidget):
         ax.set_xlabel('MFC Coefficients')
         ax.set_title('MFCC - '+self.WAVE_OUTPUT_FILENAME)
         ax.imshow(self.mfccResult, interpolation='nearest', origin='lower', aspect='auto')
+
+    # Opens help window
+    def showHelp(self):
+        helpWindow = Help_Window(':Pictures/logo.png')
+
 
     def closeThisWindow(self):
         self.parent().show()

@@ -10,5 +10,7 @@
 	<file alias="logo150x.png">Pictures/logo150x.png</file>
 	<file alias="microphone1.png">Pictures/microphone1.png</file>
 	<file alias="microphone2.png">Pictures/microphone2.png</file>
+	<file alias="help.png">Pictures/help.png</file>
+
 </qresource>	
 </RCC>
