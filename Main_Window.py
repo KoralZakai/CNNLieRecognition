@@ -91,6 +91,16 @@ class Main_Window(QWidget):
         self.secondsub_Layout.addWidget(adminBtn)
         self.secondsub_Layout.addWidget(userBtn)
 
+        # Footer layout
+
+        creditsLbl = QtWidgets.QLabel('Created By Vladimir Balagula & Elias Nijim\n'
+                                      'Supervisor: Zeev Vladimir Volkovich\n'
+                                      '11/02/2019')
+        creditsLbl.setAlignment(Qt.AlignCenter)
+        self.main_layout.addWidget(creditsLbl)
+
+
+
         #show the window
         self.showMaximized()
 

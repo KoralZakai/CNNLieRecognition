@@ -42,7 +42,7 @@ class Gui_User(QWidget):
         self.WAVE_OUTPUT_FILEPATH = None
         self.pickedModelPath = None
         self.checkEnv = True
-        self.checkEnvErr = None
+        self.checkEnvErr = ""
         self.initUI()
 
 
@@ -207,18 +207,19 @@ class Gui_User(QWidget):
     # Validate that the working environment is safe to work .
     def checkEnvironment(self,type):
         checkEnv = True
+        self.checkEnvErr = ""
         winmm = ctypes.windll.winmm
         if type == 1:#check microphone
             if winmm.waveInGetNumDevs() != 1:
                 checkEnv = False
-                self.checkEnvErr = "Microphone is missing, please plugin you'r microphone"
+                self.checkEnvErr = "Microphone is missing, please plugin you'r microphone.\n"
 
         # Checking existing models
         modelPath = os.path.dirname(os.path.realpath(sys.argv[0])) + "\\Model\\"
         modelDir = os.listdir(modelPath)
         if len(modelDir) == 0:
             checkEnv = False
-            self.checkEnvErr = "There is no Models to work with"
+            self.checkEnvErr = self.checkEnvErr + "There is no Models to work with."
 
         return checkEnv
 
@@ -416,7 +417,7 @@ class Gui_User(QWidget):
         self.figureSoundWav = pyqtgraph.PlotWidget()
         self.thirdsub_Layout.addWidget(self.figureSoundWav,2,1)
         self.figureSoundWav.setTitle('Wav - '+self.WAVE_OUTPUT_FILENAME)
-        self.figureSoundWav.setLabel('left','AmpsetEnabledlitude (db)')
+        self.figureSoundWav.setLabel('left','Amplitude (db)')
         self.figureSoundWav.setLabel('bottom', 'Time (sec)')
         self.figureSoundWav.plot(Time,signal)
         self.figureSoundWav.setEnabled(False)
