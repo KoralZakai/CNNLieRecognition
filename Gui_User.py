@@ -204,7 +204,9 @@ class Gui_User(QWidget):
         #show the window
         self.show()
 
-    # Validate that the working environment is safe to work .
+    """
+    Validate that the working environment is safe to work .
+    """
     def checkEnvironment(self,type):
         checkEnv = True
         self.checkEnvErr = ""
@@ -223,6 +225,9 @@ class Gui_User(QWidget):
 
         return checkEnv
 
+    """
+    Building the Coefficients numbers combobox
+    """
     def buildCoefComboBox(self):
         self.comboBoxCoef = QtWidgets.QComboBox(self)
         for i in range(32, 226):
@@ -235,12 +240,14 @@ class Gui_User(QWidget):
         self.comboBoxCoef.setFixedHeight(25)
         self.settings_Layout.addRow(self.comboBoxCoefLbl,self.comboBoxCoef)
 
+    """
+    Building the Model's combobox
+    """
     def buildModelComboBox(self):
         self.comboboxModel = QtWidgets.QComboBox(self)
         self.comboboxModel.setFixedWidth(130)
         self.comboboxModel.setFixedHeight(25)
         self.comboboxModel.activated[str].connect(self.onActivatedComboBoxModel)
-
         modelPath = os.path.dirname(os.path.realpath(sys.argv[0])) + "\\Model\\"
         first = True
         for modelname in os.listdir(modelPath):
@@ -249,21 +256,26 @@ class Gui_User(QWidget):
                 if first:
                     self.pickedModelPath =modelPath +modelname
                     first = False
-
-
         self.comboBoxModelLbl = QtWidgets.QLabel('Model')
         self.comboBoxModelLbl.setFixedWidth(75)
         self.comboBoxModelLbl.setFixedHeight(25)
         self.settings_Layout.addRow(self.comboBoxModelLbl,self.comboboxModel)
 
-
+    """
+    Getting the Coefficients number once the user click on the Coefficients combobox 
+    """
     def onActivatedComboBoxCoef(self, text):
         self.NUMCEP = int(text)
 
-
+    """
+    Getting the Model once the user click on the Coefficients combobox 
+    """
     def onActivatedComboBoxModel(self, text):
         self.pickedModelPath = os.path.dirname(os.path.realpath(sys.argv[0])) + "\\Model\\"+text+'.h5'
 
+    """
+    Initialize the settings before displaying graphs 
+    """
     def initSettings(self):
         self.clearGraph(3)
         self.clearGraph(4)
