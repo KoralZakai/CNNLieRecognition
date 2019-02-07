@@ -13,7 +13,7 @@ import pyqtgraph
 from ModelTrainingUtils.CNN import *
 import ctypes
 from Help_Window import Help_Window
-
+import sys
 class Gui_User(QWidget):
     def __init__(self, parent=None):
         super(Gui_User, self).__init__(parent)

@@ -1,14 +1,7 @@
-from __future__ import print_function
-
 import math
-import sys
-
 import keras
-import tensorflow as tf
-from PyQt5 import QtCore
 from keras import regularizers
 from keras.applications.vgg16 import VGG16
-from keras.callbacks import Callback
 from keras.layers import Dense, Flatten, Activation, Dropout
 from keras.models import Model
 from python_speech_features import mfcc
@@ -18,31 +11,42 @@ import os
 import tensorflow as tf
 from keras import backend as K
 from keras.models import load_model
+from datetime import datetime
 import random as rnd
 CLASSES_NBR = 2
-VERBOSE = 1
 HIDDEN_NBR = 1000
-INPUTFILES_NBR = 535
-TESTFILES_NBR = 30
 
 
 class CNN():
-
-    # constructor to initialize parameters for data and model
-    # batch_size - int value number of training examples utilized in one iteration
-    # train_perc - the percent of data which usig to train the model
-    # epoch_nbr - number of iteration over the training data
-    # learn_rate - controls how much we are adjusting the weights of our network
-    # optimizer - optimizer for model could be one of ('sgd','adam','rmsprop')
-    # column_nbr - number of columns in the input data minimum 32
+    """
+    This class give the ability to create CNN model with different parameters.
+    It also have the ability to store and load model.
+    """
     def __init__(self, output=None, model=None, calback_func=None, batch_size=10, train_perc=0.8, epoch_nbr=10,
                  learn_rate=0.001, optimizer='adam', column_nbr=32, name=None):
+        """
+        constructor to initialize parameters for data and model
+        :param output:
+        :param model:
+        :param calback_func:
+        :param batch_size: int value number of training examples utilized in one iteration
+        :param train_perc: the percent of data which usig to train the model
+        :param epoch_nbr: number of iteration over the training data
+        :param learn_rate:  controls how much we are adjusting the weights of our network
+        :param optimizer:  optimizer for model could be one of ('sgd','adam','rmsprop')
+        :param column_nbr: number of columns in the input data minimum 32
+        :param name:
+        """
         super(CNN, self).__init__()
-        self.name = name
+        if name is None:
+            self.name = datetime.now().strftime('%Y%m%d_%H_%M_%S')
+        else:
+            self.name = name
         self.isRun = False
         self.AccuracyCallback = calback_func
         self.output = output
         self.line_nbr = 225
+        # check if file with model parameters was passed
         if model != None:
             self.loadModel(model)
             return
@@ -53,57 +57,60 @@ class CNN():
         self.dictionary = {"W": "Anger", "L": "Boredom", "E": "Disgust", "A": "Fear", "F": "Happiness", "T": "Sadness",
                            "N": "Neutral"}
         self.column_nbr = column_nbr
-
         self.session = tf.Session()
-        # K.set_session(self.session)
-        # self.session.run(tf.global_variables_initializer())
-
         self.createNewVGG16Model()
         self.default_graph = tf.get_default_graph()
 
     def set_running_status(self, isRun):
+        """
+        function to control learning process
+        :param isRun: change status of thread
+        :return:
+        """
         self.isRun = isRun
 
-    # initialize the optimizer of the model
     def _setOptimizer(self, optimizer, learn_rate):
+        """
+        init the optimizer
+        """
         if optimizer == 'adam':
-            self.opt = keras.optimizers.Adam(lr=learn_rate,decay=0.0001)
+            self.opt = keras.optimizers.Adam(lr=learn_rate)
         elif optimizer == 'sgd':
             self.opt = keras.optimizers.SGD(lr=learn_rate)
         else:
             self.opt = keras.optimizers.RMSprop(lr=learn_rate)
         if self.output:
-            self.output.emit("Setup optimizer")
+            self.output[str].emit("Setup optimizer")
 
-    # init data set of csv files ta
     def createDataSet(self):
-        # loading all wav files names
+        """
+        parsing all files in db/wav files with MFCC function and store it as
+        csv file in db/MFCC folder
+        """
         winstep = 0.005
         filenames = os.listdir("db\\wav")
-        self.data = np.zeros((len(filenames), 3, self.line_nbr, self.column_nbr), dtype=float)
-        self.label = np.zeros((len(filenames), 1), dtype=int)
+        # create store folder if it not exists
         if not os.path.exists("db\MFCC"):
             os.makedirs("db\MFCC")
+        # run over wav files
         for i in range(len(filenames)):
             if not self.isRun:
                 break
             (rate, sig) = wav.read("db\\wav\\{0}".format(filenames[i]))
             temp = mfcc(sig, rate, winstep=winstep, numcep=self.column_nbr, nfilt=self.column_nbr)
             np.savetxt("db\\MFCC\\{0}.csv".format(filenames[i]), temp[0:self.line_nbr, :], delimiter=",")
-            # run over the data and label each one
-            for j in range(3):
-                self.data[i][j] = temp[self.line_nbr, :]
+            # print to log
             if self.dictionary[filenames[i][5]] == "Fear":
-                self.label[i] = True
+                toPrint = "True"
             else:
-                self.label[i] = False
+                toPrint = "False"
             if self.output:
-                self.output.emit("the file {} has been parsed with value {}".format(filenames[i], self.label[i]))
+                self.output[str].emit("{} has been parsed with value {}".format(filenames[i], toPrint))
 
-    # load csv files into arrays
-
-    # load csv files into arrays
     def load_data(self):
+        """
+        load csv files into variables of the class
+        """
         # shuffle the data
         filenames = os.listdir("db\\MFCC\\")
         rnd.shuffle(filenames)
@@ -115,7 +122,7 @@ class CNN():
         self.test_label = np.zeros((len(test_files), 1), dtype=int)
         self.train_data = np.zeros((len(train_files), 3, self.line_nbr, self.column_nbr), dtype=float)
         self.test_data = np.zeros((len(test_files), 3, self.line_nbr, self.column_nbr), dtype=float)
-        # run over the data and label each one
+        # run over the train data and label each one
         for i in range(len(train_files)):
             if not self.isRun:
                 break
@@ -125,6 +132,7 @@ class CNN():
                 self.train_label[i] = True
             else:
                 self.train_label[i] = False
+        # run over the test data and label each one
         for i in range(len(test_files)):
             if not self.isRun:
                 break
@@ -135,8 +143,10 @@ class CNN():
             else:
                 self.test_label[i] = False
 
-    # create VGG16 model
     def createNewVGG16Model(self):
+        """
+        create VGG16 model with contains VGG16 covolution layers and our fully connected layers
+        """
         config = tf.ConfigProto(log_device_placement=False, allow_soft_placement=True)
         sess = tf.Session(config=config)
         K.set_session(sess)  # K is keras backend
@@ -159,19 +169,32 @@ class CNN():
         self.model.compile(loss='binary_crossentropy', optimizer=self.opt, metrics=['accuracy'])
         self.model.summary()
         if self.output:
-            self.output.emit(self.model.summary())
+            self.output[str].emit(self.model.summary())
 
     def saveModel(self, fileName):
+        """
+        saving model as h5 file
+        :param fileName: store file name
+        """
         self.model.save('{}.h5'.format(fileName))  # creates a HDF5 file 'my_model.h5'
 
     def loadModel(self, fileName):
+        """
+        loading model from file system
+        :param fileName:
+        """
         self.model = load_model('{}'.format(fileName))
         # getting the model filter numbers
         thirdDimension = self.model.input.shape[2]
         self.column_nbr = thirdDimension.__int__()
 
     def predict(self, input):
-        # self.line_nbr=input.shape[0]
+        """
+        prediction function using input and choosed model
+        :param input:
+        :return:
+        """
+        # reshaping input
         input_model = np.zeros((1, 3, self.line_nbr, self.column_nbr), dtype=float)
         input_model[0][0] = input_model[0][1] = input_model[0][2] = input[0:225, :]
         input_model = input_model.reshape(input_model.shape[0], self.line_nbr, self.column_nbr, 3)
@@ -179,26 +202,17 @@ class CNN():
 
         return float(res[0][0]), float(res[0][1])
 
-    def shuffle(self, data, label, test_size=0.2):
-        from random import shuffle
-        indices = np.arange(data.shape[0])  # gets the number of rows
-        shuffle(indices)
-        shuffled_data = data[list(indices)]
-        shuffled_label = label[list(indices)]
-        split = math.floor(self.train_percent * len(label))
-        train_data = shuffled_data[0, split]
-        test_data = shuffled_data[split + 1, :]
-        train_label = shuffled_label[0, split]
-        test_label = shuffled_label[split + 1, :]
-        return train_data, test_data, train_label, test_label
-
     def trainModel(self):
+        """
+        traing model using train and test data
+        """
+        # normalize train data
         max = np.max(self.train_data)
         min = np.min(self.train_data)
-
         self.train_data = (self.train_data - min) / (max - min)
         self.train_label = keras.utils.to_categorical(self.train_label, CLASSES_NBR)
         self.train_data = self.train_data.reshape(self.train_data.shape[0], self.line_nbr, self.column_nbr, 3)
+
         # normalize validating data
         max = np.max(self.test_data)
         min = np.min(self.test_data)
@@ -207,7 +221,7 @@ class CNN():
         self.test_data = self.test_data.reshape(self.test_data.shape[0], self.line_nbr, self.column_nbr, 3)
 
         if self.isRun:
-        # normalize validating data
+            #starting to train model
             with self.default_graph.as_default():
                 history = self.model.fit(self.train_data,
                                          self.train_label,
@@ -215,15 +229,25 @@ class CNN():
                                          epochs=self.epoch_nbr,
                                          validation_data=(self.test_data, self.test_label),
                                          shuffle=True,
-                                         verbose=VERBOSE,
+                                         verbose=1,
                                          callbacks=self.getCallBacks())
                 return history
 
     def validateModel(self):
+        """
+        function to validate if model which we loaded is the same as we stored
+        for testing plan
+        """
         scores = self.model.evaluate(self.test_data, self.test_label)
         print("\n%s: %.2f%%" % (self.model.metrics_names[1], scores[1] * 100))
 
     def getCallBacks(self):
+        """
+        callbacks to use when training model.
+        - Early stopping to stop training if it;s going to be overfitting and restore best weights.
+        - TensorBoard to get option to view logs in dashboard
+        - AccuracyCallBack our Callback to print log and redrawing graphs
+        """
         earlyStop = keras.callbacks.EarlyStopping(monitor='val_loss',
                                                   min_delta=.01,
                                                   patience=5,
