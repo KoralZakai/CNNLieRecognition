@@ -115,9 +115,10 @@ class Main_Window(QWidget):
         userGui.show()
         self.main_frame.setVisible(False)
 
-# Opens help window
+    # Opens help window
     def showHelp(self):
-        helpWindow = Help_Window(':Pictures/logo.png')
+        helpWindow = Help_Window(':Pictures/helpmain2.png')
+
 
 
 if __name__ == '__main__':

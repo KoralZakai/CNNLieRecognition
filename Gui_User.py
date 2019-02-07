@@ -60,14 +60,16 @@ class Gui_User(QWidget):
         #Creating main container-frame, parent it to QWindow
         self.main_frame = QtWidgets.QFrame(self)
         self.main_frame.setObjectName("MainFrame")
+        self.main_frame.setFixedSize(self.width, self.height)
 
 
         #the first sub window
-        self.main_layout = QtWidgets.QVBoxLayout(self.main_frame)
+        main_layout = QtWidgets.QVBoxLayout(self.main_frame)
         self.firstsub_Frame = QtWidgets.QFrame(self.main_frame)
-        self.main_layout.addWidget(self.firstsub_Frame)
-        self.firstsub_Layout = QtWidgets.QFormLayout(self.firstsub_Frame)
 
+        main_layout.addWidget(self.firstsub_Frame)
+        self.firstsub_Layout = QtWidgets.QFormLayout(self.firstsub_Frame)
+        self.firstsub_Frame.setFixedHeight(self.height/5.2)
 
         # Return to main window button
         returnBtn = QtWidgets.QPushButton("")
@@ -82,15 +84,16 @@ class Gui_User(QWidget):
         helpBtn.setFixedWidth(110)
         helpBtn.setFixedHeight(110)
         helpBtn.clicked.connect(self.showHelp)
+        buttonsform = QtWidgets.QFormLayout(self)
 
+        buttonsform.addRow(returnBtn, helpBtn)
         #Setting up the form fields
         #form title init
-        self.formTitleLbl = QtWidgets.QLabel('Lie Detector')
-        self.formTitleLbl.setAlignment(Qt.AlignCenter)
-        self.formTitleLbl.setContentsMargins(0,0,50,50)
-        self.formTitleLbl.setObjectName("LableHeader")
-        self.firstsub_Layout.addRow(returnBtn,helpBtn)
-        self.firstsub_Layout.addRow(self.formTitleLbl)
+        formTitleLbl = QtWidgets.QLabel('Lie Detector')
+        formTitleLbl.setAlignment(Qt.AlignCenter)
+        formTitleLbl.setContentsMargins(0,0,50,50)
+        formTitleLbl.setObjectName("LableHeader")
+        self.firstsub_Layout.addRow(formTitleLbl)
 
         #init the browse file fields - lable , textfield, file browse button , start/stop record buttons
         fileBrowseHBoxLayout = QtWidgets.QGridLayout()
@@ -138,42 +141,33 @@ class Gui_User(QWidget):
 
         # The second sub window - loading gif window
         self.secondsub_Frame = QtWidgets.QFrame(self.main_frame)
-        self.main_layout.addWidget(self.secondsub_Frame)
+        main_layout.addWidget(self.secondsub_Frame)
         self.secondsub_Layout = QtWidgets.QFormLayout(self.secondsub_Frame)
         self.secondsub_Frame.setFixedWidth(self.width)
-        self.secondsub_Frame.setFixedHeight(50)
+        self.secondsub_Frame.setFixedHeight(self.height/8)
         self.secondsub_Layout.addRow(self.recordingLbl,self.loadingLbl)
         self.secondsub_Frame.setContentsMargins(self.width/2-self.recordingLbl.width(),0,0,0)
-
         # Settings Layout
         self.settings_Frame = QtWidgets.QFrame(self.main_frame)
-        self.main_layout.addWidget(self.settings_Frame)
+        main_layout.addWidget(self.settings_Frame)
         self.settings_Layout = QtWidgets.QFormLayout(self.settings_Frame)
         self.settings_Frame.setFixedWidth(self.width)
         self.settings_Frame.setFixedHeight(self.height/8)
         self.settings_Frame.setContentsMargins(self.width, 0, 0, 0)
         self.settings_Layout.setFormAlignment(Qt.AlignCenter)
         self.settings_Frame.setVisible(False)
-
         # the third sub window
         self.thirdsub_Frame = QtWidgets.QFrame(self.main_frame)
-        self.main_layout.addWidget(self.thirdsub_Frame)
+        main_layout.addWidget(self.thirdsub_Frame)
         self.thirdsub_Layout = QtWidgets.QGridLayout(self.thirdsub_Frame)
         self.thirdsub_Frame.setFixedWidth(self.width-25)
-        self.thirdsub_Frame.setFixedHeight(self.height/2.1)
-
+        self.thirdsub_Frame.setFixedHeight(self.height/2.2)
         logo = QtWidgets.QLabel('', self)
         pixmap = QPixmap(':Pictures/logo.png')
         logo.setPixmap(pixmap)
         self.thirdsub_Layout.addWidget(logo)
-        logo.setAlignment(Qt.AlignCenter)
 
-        # the 4rth sub window
-        self.fourthsub_Frame = QtWidgets.QFrame(self.main_frame)
-        self.main_layout.addWidget(self.fourthsub_Frame)
-        self.fourthsub_Layout = QtWidgets.QFormLayout(self.fourthsub_Frame)
-        self.fourthsub_Frame.setFixedWidth(self.width)
-        self.fourthsub_Frame.setFixedHeight(self.height / 1.8)
+        logo.setAlignment(Qt.AlignCenter|Qt.AlignTop)
 
         # assign functions to buttons
         self.startRecordBtn.clicked.connect(lambda: self.startRecord())
@@ -204,10 +198,13 @@ class Gui_User(QWidget):
         #show the window
         self.show()
 
-    """
-    Validate that the working environment is safe to work .
-    """
+
     def checkEnvironment(self,type):
+        """
+        Validate that the working environment is safe to work .
+        :param type: The check environment type , type = 1 -> check microphone if plugged in .
+
+        """
         checkEnv = True
         self.checkEnvErr = ""
         winmm = ctypes.windll.winmm
@@ -225,10 +222,11 @@ class Gui_User(QWidget):
 
         return checkEnv
 
-    """
-    Building the Coefficients numbers combobox
-    """
+
     def buildCoefComboBox(self):
+        """
+        Building the Coefficients numbers combobox
+        """
         self.comboBoxCoef = QtWidgets.QComboBox(self)
         for i in range(32, 226):
             self.comboBoxCoef.addItem(str(i))
@@ -240,10 +238,11 @@ class Gui_User(QWidget):
         self.comboBoxCoef.setFixedHeight(25)
         self.settings_Layout.addRow(self.comboBoxCoefLbl,self.comboBoxCoef)
 
-    """
-    Building the Model's combobox
-    """
+
     def buildModelComboBox(self):
+        """
+        Building the Model's combobox
+        """
         self.comboboxModel = QtWidgets.QComboBox(self)
         self.comboboxModel.setFixedWidth(130)
         self.comboboxModel.setFixedHeight(25)
@@ -261,29 +260,38 @@ class Gui_User(QWidget):
         self.comboBoxModelLbl.setFixedHeight(25)
         self.settings_Layout.addRow(self.comboBoxModelLbl,self.comboboxModel)
 
-    """
-    Getting the Coefficients number once the user click on the Coefficients combobox 
-    """
+
     def onActivatedComboBoxCoef(self, text):
+        """
+        Getting the Coefficients number once the user click on the Coefficients combobox
+        :param text: The text that the user clicked on in the combobox
+
+        """
         self.NUMCEP = int(text)
 
-    """
-    Getting the Model once the user click on the Coefficients combobox 
-    """
+
     def onActivatedComboBoxModel(self, text):
+        """
+        Getting the Model once the user click on the Coefficients combobox
+        :param text: The text that the user clicked on in the combobox
+        """
         self.pickedModelPath = os.path.dirname(os.path.realpath(sys.argv[0])) + "\\Model\\"+text+'.h5'
 
-    """
-    Initialize the settings before displaying graphs 
-    """
+
     def initSettings(self):
-        self.clearGraph(3)
-        self.clearGraph(4)
+        """
+        Initialize the settings before displaying graphs
+        """
+        self.clearGraph()
+
         self.settings_Frame.setVisible(False)
         self.NUMCEP = 32
 
-    #Opening file browser to import the Wav file.
     def openFile(self,form ):
+        """
+        Opening file browser to import the Wav file.
+        :param form: The current layout to display the message box error .
+        """
         if self.checkEnvironment(2):
             self.initSettings()
             options = QFileDialog.Options()
@@ -302,8 +310,10 @@ class Gui_User(QWidget):
         else:
             QMessageBox.about(self, "Error", self.checkEnvErr)
 
-    #Recording voice using microphone
     def startRecord(self):
+        """
+        Recording voice using microphone
+        """
         if self.checkEnvironment(1):
             self.initSettings()
             self.startRec = True
@@ -320,21 +330,28 @@ class Gui_User(QWidget):
             self.recordingLbl.setVisible(True)
             self.startRecordBtn.setVisible(False)
             self.stopRecordBtn.setVisible(True)
+            self.secondsub_Frame.setVisible(True)
+            self.fileBrowserBtn.setDisabled(True)
+
             self.frames = []
             self.recThread = threading.Thread(target = self.inputData)
             self.recThread.start()
         else:
             QMessageBox.about(self, "Error", self.checkEnvErr)
 
-    # Input stream of data from the microphone
     def inputData(self):
+        """
+        Input stream of data from the microphone
+        """
         while (self.startRec):
             data = self.stream.read(self.CHUNK)
             self.frames.append(data)
         sys.exit()
 
-    # Playing the waiting GIF
     def startWaitingGif(self):
+        """
+        Playing the waiting GIF
+        """
         self.movieGraphWait = QtGui.QMovie(":Pictures/loading2.gif")
         loadingGraphLbl = QtWidgets.QLabel('', self)
         loadingGraphLbl.setMaximumHeight(100)
@@ -343,8 +360,10 @@ class Gui_User(QWidget):
         self.firstsub_Layout.addWidget(loadingGraphLbl)
         self.movieGraphWait.start()
 
-    # Stop record and save the stream of wav frames into wav file.
     def stopRecord(self):
+        """
+        Stop record and save the stream of wav frames into wav file.
+        """
         # Stopping the recording thread
         self.startRec = False
         # Handling all the fields visibility.
@@ -352,6 +371,8 @@ class Gui_User(QWidget):
         self.stopRecordBtn.setVisible(False)
         self.startRecordBtn.setVisible(True)
         self.recordingLbl.setVisible(False)
+        self.secondsub_Frame.setVisible(False)
+        self.fileBrowserBtn.setDisabled(False)
         self.stream.stop_stream()
         self.stream.close()
         self.pyrecorded.terminate()
@@ -370,62 +391,62 @@ class Gui_User(QWidget):
         # Adding the file name to the file browser text field.
         self.fileBrowserTxt.setText(self.WAVE_OUTPUT_FILENAME)
         self.WAVE_OUTPUT_FILEPATH=os.path.dirname(os.path.realpath(sys.argv[0])) + "\\db\\Records\\" + self.WAVE_OUTPUT_FILENAME
-
         # Processing the input file.
         self.dataProcessing()
 
-    # Handiling the data processing.
     def dataProcessing(self):
+        """
+        Handiling the data processing.
+        """
         # Showing te graph's frame.
         self.settings_Frame.setVisible(True)
         # Drawing the sound graph / mfcc graph.
         self.showSoundWav()
         self.showMfcc()
 
-    # Processing the wav file / recorded file , drawing mfcc.
     def dataProcessingmfcc(self):
+        """
+        Processing the wav file / recorded file , drawing mfcc.
+        """
         # Drawing mfcc for the input file.
         self.showMfcc()
         # Prediction using the picked model .
         newCNN = CNN(model=self.pickedModelPath)
         if newCNN.column_nbr != self.NUMCEP:
-            QMessageBox.about(self, "Error", "The Coefficients Number Is Not Match ,Dont Worry, I Will Fix It For You ")
+            QMessageBox.about(self, "Error", "The Coefficients number is not match the model Properties ,dont worry, I will fix it for you ")
             self.comboBoxCoef.setCurrentIndex(newCNN.column_nbr-32)
             self.NUMCEP=int(self.comboBoxCoef.currentText())
             self.showMfcc()
         cnnResult = newCNN.predict(self.mfccResult)
         QMessageBox.information(self, "Results", "Result : "+str(cnnResult[0]))
 
-    # Clearing graphs
-    # layoutnum - the layout number that includes the wanted graph to clear.
-    def clearGraph(self,layoutnum):
-        # layoutnum = 3 -> sound wave graph.
-        # layoutnum = 4 -> mfcc grap.
-        if layoutnum == 3:
-            while self.thirdsub_Layout.count():
-                child = self.thirdsub_Layout.takeAt(0)
-                if child.widget():
-                    child.widget().deleteLater()
-        if layoutnum == 4:
-            while self.fourthsub_Layout.count():
-                child = self.fourthsub_Layout.takeAt(0)
-                if child.widget():
-                    child.widget().deleteLater()
+
+    def clearGraph(self):
+        """
+        Clearing graphs
+        :param layoutnum: the layout number that includes the wanted graph to clear.
+        layoutnum = 3 -> sound wave graph.
+        """
+
+        while self.thirdsub_Layout.count():
+            child = self.thirdsub_Layout.takeAt(0)
+            if child.widget():
+                child.widget().deleteLater()
 
 
-    # Drawing sound wave graph.
     def showSoundWav(self ):
+        """
+        Drawing sound wave graph.
+        """
         # Clear the sound wave graph.
-        self.clearGraph(3)
+        self.clearGraph()
         # Reading wave file frames.
         spf = wave.open(self.WAVE_OUTPUT_FILEPATH, 'r')
         signal = spf.readframes(-1)
         signal = np.fromstring(signal, np.int16)
         # A figure instance to plot on.
-
         fs = spf.getframerate()
         Time = np.linspace(0, len(signal) / fs, num=len(signal))
-
         self.figureSoundWav = pyqtgraph.PlotWidget()
         self.thirdsub_Layout.addWidget(self.figureSoundWav,2,1)
         self.figureSoundWav.setTitle('Wav - '+self.WAVE_OUTPUT_FILENAME)
@@ -437,31 +458,25 @@ class Gui_User(QWidget):
         self.figureSoundWav.getAxis('bottom').enableAutoSIPrefix(False)
         self.figureSoundWav.getAxis('left').enableAutoSIPrefix(False)
 
-
-    # Drawing the MFCC graph..
     def showMfcc(self):
-        # Clear the graph.
-        self.clearGraph(4)
+        """
+        Drawing the MFCC graph.
+        """
         # Reading the wav file.
         (rate, sig) = wav.read(self.WAVE_OUTPUT_FILEPATH)
-
         # Execute mfcc function on the wav file.
         # winstep - mfcc window step.
         # numcep - coefficients number.
         # nflit - filters number.
         self.mfccResult = mfcc(sig, rate,winstep=0.005,numcep=self.NUMCEP,nfilt=self.NUMCEP)
-
         # Sound figure.
         self.mfccfigure = Figure()
-
         # This is the Canvas Widget that displays the `figure`.
         # It takes the `figure` instance as a parameter to __init__.
         self.mfcccanvas = FigureCanvas(self.mfccfigure)
-
         # this is the Navigation widget
         # it takes the Canvas widget and a parent
         self.thirdsub_Layout.addWidget(self.mfcccanvas,2,2)
-
         # create an axis
         # 111 - 1x1 grid, first subplot
         ax = self.mfccfigure.add_subplot(111)
@@ -470,12 +485,18 @@ class Gui_User(QWidget):
         ax.set_title('MFCC - '+self.WAVE_OUTPUT_FILENAME)
         ax.imshow(self.mfccResult, interpolation='nearest', origin='lower', aspect='auto')
 
-    # Opens help window
+
     def showHelp(self):
-        helpWindow = Help_Window(':Pictures/logo.png')
+        """
+        Opens help window.
+        """
+        helpWindow = Help_Window(':Pictures/helpuser3.png')
 
 
     def closeThisWindow(self):
+        """
+        Close the current window and open the main window.
+        """
         self.parent().show()
         self.parent().main_frame.setVisible(True)
         self.close()

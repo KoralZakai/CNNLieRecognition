@@ -90,7 +90,7 @@ class Gui_Admin(QWidget):
         initiate default parameters for model
         :return:
         """
-        self.defaultDict = {'Batch size': 10, 'Learning Rate': 0.0001, 'Epoch Number': 30, 'Column Number': 32}
+        self.defaultDict = {'Batch size': 10, 'Learning Rate': 0.0001, 'Epoch Number': 30, 'Filter Number': 32}
         self.comboText = 'adam'
         self.train_percent = 0.8
 
@@ -325,15 +325,14 @@ class Gui_Admin(QWidget):
                 self.CNNThread.stopThread()
                 self.CNNThread.join()
                 self.btnStartLearnPhase.setText("Start")
-                self.btnStartLearnPhase.setDisabled(False)
-                self.changeDisable(False)
+
 
         except Exception as e:
             QMessageBox.information(self, "Warning", e)
 
     def changeDisable(self,status):
         """
-        change enable form manage when starting to train model or whenn finish to train model
+        change enable form manage when starting to train model or when finish to train model
         :param status:
         :return:
         """
@@ -369,6 +368,9 @@ class Gui_Admin(QWidget):
             QMessageBox.information(self, "Cancel", "The file was not saved")
         self.btnStartLearnPhase.setText("Start")
         self.graph_frame.setVisible(False)
+        self.btnStartLearnPhase.setDisabled(False)
+        self.changeDisable(False)
+
 
     def file_save(self):
         """
@@ -385,10 +387,9 @@ class Gui_Admin(QWidget):
         self.parent().show()
         self.parent().main_frame.setVisible(True)
         self.close()
-
     # Opens help window
     def showHelp(self):
         """
         display help
         """
-        helpWindow = Help_Window(':Pictures/logo.png')
+        helpWindow = Help_Window(':Pictures/helpadmin3.png')
