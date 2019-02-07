@@ -1,13 +1,13 @@
-
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox
+from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5 import QtWidgets
-from PyQt5.QtCore import Qt, QFile, QTextCodec, QTextStream
+from PyQt5.QtCore import Qt, QFile, QTextStream
 from ModelTrainingUtils.CNN import *
 import ctypes
 from Gui_Admin import Gui_Admin
 from Gui_User import Gui_User
 from Help_Window import Help_Window
+import sys
 #don't delete using python files with image and css source
 import design
 import css
