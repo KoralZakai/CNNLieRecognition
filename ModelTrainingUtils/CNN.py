@@ -129,9 +129,9 @@ class CNN():
             for j in range(3):
                 self.train_data[i][j] = np.loadtxt(open("db\\MFCC\\{0}".format(filenames[i]), "rb"), delimiter=",")
             if self.dictionary[filenames[i][5]] == "Fear":
-                self.train_label[i] = True
-            else:
                 self.train_label[i] = False
+            else:
+                self.train_label[i] = True
         # run over the test data and label each one
         for i in range(len(test_files)):
             if not self.isRun:
@@ -139,9 +139,9 @@ class CNN():
             for j in range(3):
                 self.test_data[i][j] = np.loadtxt(open("db\\MFCC\\{0}".format(filenames[i]), "rb"), delimiter=",")
             if self.dictionary[filenames[i][5]] == "Fear":
-                self.test_label[i] = True
-            else:
                 self.test_label[i] = False
+            else:
+                self.test_label[i] = True
 
     def createNewVGG16Model(self):
         """
@@ -162,8 +162,8 @@ class CNN():
         nextLayer = Dense(1000, kernel_regularizer=regularizers.l2(0.001))(nextLayer)
         nextLayer = Activation("relu")(nextLayer)
         nextLayer = Dropout(0.5)(nextLayer)
-        nextLayer = Dense(CLASSES_NBR)(nextLayer)
-        lastLayer = Activation("softmax", dtype="float32")(nextLayer)
+        lastLayer = Dense(CLASSES_NBR,activation="softmax")(nextLayer)
+        #lastLayer = Activation("softmax", dtype="float32")(nextLayer)
         self.model = Model(VGG16_conv2D.input, lastLayer)
         # compile the model
         self.model.compile(loss='binary_crossentropy', optimizer=self.opt, metrics=['accuracy'])
@@ -196,6 +196,7 @@ class CNN():
         """
         # reshaping input
         input_model = np.zeros((1, 3, self.line_nbr, self.column_nbr), dtype=float)
+        input_model[0][0] = input_model[0][1] = input_model[0][2] = input[0:225, :]
         input_model[0][0] = input_model[0][1] = input_model[0][2] = input[0:225, :]
         input_model = input_model.reshape(input_model.shape[0], self.line_nbr, self.column_nbr, 3)
         res = self.model.predict(input_model, verbose=1)
