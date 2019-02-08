@@ -11,7 +11,7 @@ from ModelTrainingUtils.CNN import CNN
 
 
 
-for modelFile in ["2.h5"]:#os.listdir("Model"):
+for modelFile in ["3.h5"]:#os.listdir("Model"):
     print(modelFile)
     winstep = 0.005
     filenames = os.listdir("db\\wav")
@@ -41,7 +41,7 @@ for modelFile in ["2.h5"]:#os.listdir("Model"):
                                                                                             false_pos, false_neg))
     '''
     #
-    data = data.reshape(model.data.shape[0], 225, 40, 3)
+    data = model.data.reshape(model.data.shape[0], 225, 32, 3)
     predictions = model.model.predict(data, batch_size=1, verbose=0)
     label = model.label.ravel()
 
