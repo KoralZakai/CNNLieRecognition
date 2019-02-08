@@ -349,12 +349,14 @@ class Gui_Admin(QWidget):
         """
         init graph labels
         """
-        for lbl in [Graph.ACC_EPOCH, Graph.ACC_BATCH]:
-            self.graph_arr[lbl].setLabel('bottom', 'Epoch number', units='times')
-            self.graph_arr[lbl].setLabel('left', 'Accuracy', units='%')
-        for lbl in [Graph.LOSS_BATCH, Graph.LOSS_EPOCH]:
-            self.graph_arr[lbl].setLabel('left', 'Loss value', units='%')
-            self.graph_arr[lbl].setLabel('bottom', 'Epoch number', units='times')
+        self.graph_arr[Graph.ACC_EPOCH].setLabel('bottom', 'Epoch number', units='times')
+        self.graph_arr[Graph.ACC_EPOCH].setLabel('left', 'Accuracy', units='%')
+        self.graph_arr[Graph.LOSS_EPOCH].setLabel('left', 'Loss value', units='%')
+        self.graph_arr[Graph.LOSS_EPOCH].setLabel('bottom', 'Epoch number', units='times')
+        self.graph_arr[Graph.ACC_BATCH].setLabel('bottom', 'Batch number', units='times')
+        self.graph_arr[Graph.ACC_BATCH].setLabel('left', 'Accuracy', units='%')
+        self.graph_arr[Graph.LOSS_BATCH].setLabel('left', 'Loss value', units='%')
+        self.graph_arr[Graph.LOSS_BATCH].setLabel('bottom', 'Batch number', units='times')
 
     def on_show_message_box(self, res):
         """
@@ -372,6 +374,8 @@ class Gui_Admin(QWidget):
         self.graph_frame.setVisible(False)
         self.btnStartLearnPhase.setDisabled(False)
         self.changeDisable(False)
+        for i in range(4):
+            self.graph_arr[i].clear()
 
 
     def file_save(self):
