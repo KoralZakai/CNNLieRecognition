@@ -7,7 +7,7 @@ import scipy.io.wavfile as wav
 from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 
-PATH = "db\\English"
+PATH = "db\\English\\wav"
 from ModelTrainingUtils.CNN import CNN
 def confusion():
     for modelFile in ["4.h5"]:  # os.listdir("Model"):
@@ -72,5 +72,5 @@ def changeFile():
             NotLie += 1
             os.rename("{}\\{}".format(PATH, file), "{}\\NotLie_{}.wav".format(PATH, NotLie))
 
-#changeFile()
-confusion()
+changeFile()
+#confusion()

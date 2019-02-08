@@ -1,4 +1,6 @@
 import math
+import wave
+
 import keras
 from keras import regularizers
 from keras.applications.vgg16 import VGG16
@@ -25,7 +27,7 @@ class CNN():
     This class give the ability to create CNN model with different parameters.
     It also have the ability to store and load model.
     """
-    DB_PATH = "db\\English"
+    DB_PATH = "db\\Germany"
 
     def __init__(self, output=None, model=None, calback_func=None, batch_size=10, train_perc=0.8, epoch_nbr=10,
                  learn_rate=0.001, optimizer='adam', column_nbr=32, name=None):
@@ -102,8 +104,14 @@ class CNN():
         for i in range(len(filenames)):
             if not self.isRun:
                 break
-            (rate, sig) = wav.read("{0}\\wav\\{1}".format(self.DB_PATH,filenames[i]))
-            temp = mfcc(sig, rate, winstep=winstep, numcep=self.column_nbr, nfilt=self.column_nbr)
+            #(rate, sig) = wav.read("{0}\\wav\\{1}".format(self.DB_PATH,filenames[i]))
+            # Reading wave file frames.
+            spf = wave.open("{0}\\wav\\{1}".format(self.DB_PATH,filenames[i]), 'r')
+            sig = spf.readframes(-1)
+            sig = np.fromstring(sig, np.int16)
+            # A figure instance to plot on.
+            rate = spf.getframerate()
+            temp = mfcc(sig, rate, winstep=winstep, numcep=self.column_nbr, nfilt=self.column_nbr,nfft=1200)
             np.savetxt("{0}\\MFCC\\{1}.csv".format(self.DB_PATH,filenames[i]), temp[0:self.line_nbr, :], delimiter=",")
             self.data[i][0] = temp[0:self.line_nbr, :]
             # print to log
