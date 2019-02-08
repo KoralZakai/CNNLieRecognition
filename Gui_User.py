@@ -468,7 +468,7 @@ class Gui_User(QWidget):
         # winstep - mfcc window step.
         # numcep - coefficients number.
         # nflit - filters number.
-        self.mfccResult = mfcc(sig, rate,winstep=0.005,numcep=self.NUMCEP,nfilt=self.NUMCEP)
+        self.mfccResult = mfcc(sig, rate,winstep=0.005,numcep=self.NUMCEP,nfilt=self.NUMCEP,nfft=1200)
         # Sound figure.
         self.mfccfigure = Figure()
         # This is the Canvas Widget that displays the `figure`.
