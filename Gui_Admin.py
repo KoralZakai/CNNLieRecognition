@@ -325,7 +325,9 @@ class Gui_Admin(QWidget):
                 self.CNNThread.stopThread()
                 self.CNNThread.join()
                 self.btnStartLearnPhase.setText("Start")
-
+                self.graph_frame.setVisible(False)
+                self.btnStartLearnPhase.setDisabled(False)
+                self.changeDisable(False)
 
         except Exception as e:
             QMessageBox.information(self, "Warning", e)
