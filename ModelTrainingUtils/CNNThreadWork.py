@@ -34,7 +34,7 @@ class CNNThreadWork(Thread):
         self.app.logText[str].emit("loading csv file to variables...")
         if not self.is_run:
             return
-        self.CNN_model.load_data()
+        #self.CNN_model.load_data()
         # print to log with disable start button because train model is an atomic function
         # and there is no way to stop it except destroy the thread
         self.app.logText[str, bool].emit("starting to train model...", True)
