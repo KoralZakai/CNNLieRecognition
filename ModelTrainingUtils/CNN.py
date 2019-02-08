@@ -25,6 +25,8 @@ class CNN():
     This class give the ability to create CNN model with different parameters.
     It also have the ability to store and load model.
     """
+    DB_PATH="db\\Germany"
+
     def __init__(self, output=None, model=None, calback_func=None, batch_size=10, train_perc=0.8, epoch_nbr=10,
                  learn_rate=0.001, optimizer='adam', column_nbr=32, name=None):
         """
@@ -41,8 +43,7 @@ class CNN():
         :param name:
         """
         super(CNN, self).__init__()
-        self.dictionary = {"W": "Anger", "L": "Boredom", "E": "Disgust", "A": "Fear", "F": "Happiness", "T": "Sadness",
-                           "N": "Neutral"}
+        K.clear_session()
         if name is None:
             self.name = datetime.now().strftime('%Y%m%d_%H_%M_%S')
         else:
@@ -91,22 +92,22 @@ class CNN():
         csv file in db/MFCC folder
         """
         winstep = 0.005
-        filenames = os.listdir("db\\wav")
+        filenames = os.listdir("{}\\wav".format(self.DB_PATH))
         # create store folder if it not exists
-        if not os.path.exists("db\MFCC"):
-            os.makedirs("db\MFCC")
+        if not os.path.exists("{}\\MFCC".format(self.DB_PATH)):
+            os.makedirs("{}\\MFCC".format(self.DB_PATH))
         self.label = np.zeros((len(filenames), 1), dtype=int)
         self.data = np.zeros((len(filenames), 3, self.line_nbr, self.column_nbr), dtype=float)
         # run over wav files
         for i in range(len(filenames)):
             if not self.isRun:
                 break
-            (rate, sig) = wav.read("db\\wav\\{0}".format(filenames[i]))
-            temp = mfcc(sig, rate, winstep=winstep, numcep=12, nfilt=12)
-            np.savetxt("db\\MFCC\\{0}.csv".format(filenames[i]), temp[0:self.line_nbr, :], delimiter=",")
-            self.data[i][0][:, 0:12] =  self.data[i][0][:, 0:12] =  self.data[i][0][:, 0:12] = temp[0:self.line_nbr, :]
+            (rate, sig) = wav.read("{0}\\wav\\{1}".format(self.DB_PATH,filenames[i]))
+            temp = mfcc(sig, rate, winstep=winstep, numcep=self.column_nbr, nfilt=self.column_nbr)
+            np.savetxt("{0}\\MFCC\\{1}.csv".format(self.DB_PATH,filenames[i]), temp[0:self.line_nbr, :], delimiter=",")
+            self.data[i][0] = temp[0:self.line_nbr, :]
             # print to log
-            if self.dictionary[filenames[i][5]] == "Fear":
+            if filenames[i].startswith("Lie"):
                 toPrint = "True"
                 self.label[i] = 1
             else:
@@ -133,7 +134,6 @@ class CNN():
         nextLayer = Flatten()(last)
         nextLayer = Dense(1000, kernel_regularizer=regularizers.l2(0.001))(nextLayer)
         nextLayer = Activation("relu")(nextLayer)
-        nextLayer = Dropout(0.5)(nextLayer)
         lastLayer = Dense(CLASSES_NBR,activation="softmax")(nextLayer)
         #lastLayer = Activation("softmax", dtype="float32")(nextLayer)
         self.model = Model(VGG16_conv2D.input, lastLayer)
@@ -159,7 +159,6 @@ class CNN():
         # getting the model filter numbers
         thirdDimension = self.model.input.shape[2]
         self.column_nbr = thirdDimension.__int__()
-        self.line_nbr = 225
 
     def predict(self, input):
         """
@@ -189,7 +188,7 @@ class CNN():
 
         X_train, X_test, y_train, y_test = train_test_split(self.data, self.label, test_size=1-self.train_percent)
         if self.isRun:
-            # starting to train model
+            #starting to train model
             with self.default_graph.as_default():
                 history = self.model.fit(X_train,
                                          y_train,
