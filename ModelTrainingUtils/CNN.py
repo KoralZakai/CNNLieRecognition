@@ -13,6 +13,9 @@ from keras import backend as K
 from keras.models import load_model
 from datetime import datetime
 import random as rnd
+
+from sklearn.model_selection import train_test_split
+
 CLASSES_NBR = 2
 HIDDEN_NBR = 1000
 
@@ -38,6 +41,8 @@ class CNN():
         :param name:
         """
         super(CNN, self).__init__()
+        self.dictionary = {"W": "Anger", "L": "Boredom", "E": "Disgust", "A": "Fear", "F": "Happiness", "T": "Sadness",
+                           "N": "Neutral"}
         if name is None:
             self.name = datetime.now().strftime('%Y%m%d_%H_%M_%S')
         else:
@@ -54,8 +59,6 @@ class CNN():
         self.epoch_nbr = epoch_nbr
         self.batch_size = batch_size
         self.train_percent = train_perc
-        self.dictionary = {"W": "Anger", "L": "Boredom", "E": "Disgust", "A": "Fear", "F": "Happiness", "T": "Sadness",
-                           "N": "Neutral"}
         self.column_nbr = column_nbr
         self.session = tf.Session()
         self.createNewVGG16Model()
@@ -92,56 +95,25 @@ class CNN():
         # create store folder if it not exists
         if not os.path.exists("db\MFCC"):
             os.makedirs("db\MFCC")
+        self.label = np.zeros((len(filenames), 1), dtype=int)
+        self.data = np.zeros((len(filenames), 3, self.line_nbr, self.column_nbr), dtype=float)
         # run over wav files
         for i in range(len(filenames)):
             if not self.isRun:
                 break
             (rate, sig) = wav.read("db\\wav\\{0}".format(filenames[i]))
-            temp = mfcc(sig, rate, winstep=winstep, numcep=self.column_nbr, nfilt=self.column_nbr)
+            temp = mfcc(sig, rate, winstep=winstep, numcep=12, nfilt=12)
             np.savetxt("db\\MFCC\\{0}.csv".format(filenames[i]), temp[0:self.line_nbr, :], delimiter=",")
+            self.data[i][0][:, 0:12] =  self.data[i][0][:, 0:12] =  self.data[i][0][:, 0:12] = temp[0:self.line_nbr, :]
             # print to log
             if self.dictionary[filenames[i][5]] == "Fear":
                 toPrint = "True"
+                self.label[i] = 1
             else:
                 toPrint = "False"
+                self.label[i] = 0
             if self.output:
                 self.output[str].emit("{} has been parsed with value {}".format(filenames[i], toPrint))
-
-    def load_data(self):
-        """
-        load csv files into variables of the class
-        """
-        # shuffle the data
-        filenames = os.listdir("db\\MFCC\\")
-        rnd.shuffle(filenames)
-        split = math.floor(self.train_percent * len(filenames))
-        train_files = filenames[0:split]
-        test_files = filenames[split:]
-        # init the data for model
-        self.train_label = np.zeros((len(train_files), 1), dtype=int)
-        self.test_label = np.zeros((len(test_files), 1), dtype=int)
-        self.train_data = np.zeros((len(train_files), 3, self.line_nbr, self.column_nbr), dtype=float)
-        self.test_data = np.zeros((len(test_files), 3, self.line_nbr, self.column_nbr), dtype=float)
-        # run over the train data and label each one
-        for i in range(len(train_files)):
-            if not self.isRun:
-                break
-            for j in range(3):
-                self.train_data[i][j] = np.loadtxt(open("db\\MFCC\\{0}".format(filenames[i]), "rb"), delimiter=",")
-            if self.dictionary[filenames[i][5]] == "Fear":
-                self.train_label[i] = False
-            else:
-                self.train_label[i] = True
-        # run over the test data and label each one
-        for i in range(len(test_files)):
-            if not self.isRun:
-                break
-            for j in range(3):
-                self.test_data[i][j] = np.loadtxt(open("db\\MFCC\\{0}".format(filenames[i]), "rb"), delimiter=",")
-            if self.dictionary[filenames[i][5]] == "Fear":
-                self.test_label[i] = False
-            else:
-                self.test_label[i] = True
 
     def createNewVGG16Model(self):
         """
@@ -187,6 +159,7 @@ class CNN():
         # getting the model filter numbers
         thirdDimension = self.model.input.shape[2]
         self.column_nbr = thirdDimension.__int__()
+        self.line_nbr = 225
 
     def predict(self, input):
         """
@@ -208,27 +181,21 @@ class CNN():
         traing model using train and test data
         """
         # normalize train data
-        max = np.max(self.train_data)
-        min = np.min(self.train_data)
-        self.train_data = (self.train_data - min) / (max - min)
-        self.train_label = keras.utils.to_categorical(self.train_label, CLASSES_NBR)
-        self.train_data = self.train_data.reshape(self.train_data.shape[0], self.line_nbr, self.column_nbr, 3)
+        max = np.max(self.data)
+        min = np.min(self.data)
+        self.data = (self.data - min) / (max - min)
+        self.label = keras.utils.to_categorical(self.label, CLASSES_NBR)
+        self.data = self.data.reshape(self.data.shape[0], self.line_nbr, self.column_nbr, 3)
 
-        # normalize validating data
-        max = np.max(self.test_data)
-        min = np.min(self.test_data)
-        self.test_data = (self.test_data - min) / (max - min)
-        self.test_label = keras.utils.to_categorical(self.test_label, CLASSES_NBR)
-        self.test_data = self.test_data.reshape(self.test_data.shape[0], self.line_nbr, self.column_nbr, 3)
-
+        X_train, X_test, y_train, y_test = train_test_split(self.data, self.label, test_size=1-self.train_percent)
         if self.isRun:
-            #starting to train model
+            # starting to train model
             with self.default_graph.as_default():
-                history = self.model.fit(self.train_data,
-                                         self.train_label,
+                history = self.model.fit(X_train,
+                                         y_train,
                                          batch_size=self.batch_size,
                                          epochs=self.epoch_nbr,
-                                         validation_data=(self.test_data, self.test_label),
+                                         validation_data=(X_test, y_test),
                                          shuffle=True,
                                          verbose=1,
                                          callbacks=self.getCallBacks())
@@ -239,7 +206,7 @@ class CNN():
         function to validate if model which we loaded is the same as we stored
         for testing plan
         """
-        scores = self.model.evaluate(self.test_data, self.test_label)
+        scores = self.model.evaluate(self.data, self.label)
         print("\n%s: %.2f%%" % (self.model.metrics_names[1], scores[1] * 100))
 
     def getCallBacks(self):
