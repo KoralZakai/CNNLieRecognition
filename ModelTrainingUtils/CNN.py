@@ -25,7 +25,7 @@ class CNN():
     This class give the ability to create CNN model with different parameters.
     It also have the ability to store and load model.
     """
-    DB_PATH="db\\Germany"
+    DB_PATH = "db\\English"
 
     def __init__(self, output=None, model=None, calback_func=None, batch_size=10, train_perc=0.8, epoch_nbr=10,
                  learn_rate=0.001, optimizer='adam', column_nbr=32, name=None):
