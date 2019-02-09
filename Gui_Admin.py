@@ -268,22 +268,6 @@ class Gui_Admin(QWidget):
         """
         try:
             if self.btnStartLearnPhase.text() == "Start":
-                graphNames = ["Accuracy Epoch",
-                              "Loss Epoch",
-                              "Accuracy Batch",
-                              "Loss Batch"]
-                j = 0
-                pg.setConfigOption("antialias", True)
-                for i in range(4):
-                    # Building the graphs
-                    self.graph_arr.append(pg.PlotWidget(title=graphNames[i]))
-                    self.graph_arr[i].showGrid(x=True, y=True)
-                    self.graph_arr[i].getAxis('bottom').enableAutoSIPrefix(False)
-                    self.graph_arr[i].getAxis('left').enableAutoSIPrefix(False)
-                    self.graph_arr[i].setEnabled(False)
-                    self.graph_layout.addWidget(self.graph_arr[i], j, i % 2, 1, 1)
-                    if i == 1:
-                        j += 1
 
                 exceptionMsg = ""
 
@@ -305,6 +289,24 @@ class Gui_Admin(QWidget):
                     exceptionMsg = exceptionMsg + "Filter number must be between 32 and 225.\n"
                 if len(exceptionMsg) > 0:
                     raise Exception(exceptionMsg)
+
+                graphNames = ["Accuracy Epoch",
+                              "Loss Epoch",
+                              "Accuracy Batch",
+                              "Loss Batch"]
+                j = 0
+                pg.setConfigOption("antialias", True)
+                for i in range(4):
+                    # Building the graphs
+                    self.graph_arr.append(pg.PlotWidget(title=graphNames[i]))
+                    self.graph_arr[i].showGrid(x=True, y=True)
+                    self.graph_arr[i].getAxis('bottom').enableAutoSIPrefix(False)
+                    self.graph_arr[i].getAxis('left').enableAutoSIPrefix(False)
+                    self.graph_arr[i].setEnabled(False)
+                    self.graph_layout.addWidget(self.graph_arr[i], j, i % 2, 1, 1)
+                    if i == 1:
+                        j += 1
+
                 # training model
                 self.btnStartLearnPhase.setText("Cancel")
                 self.init_graph_by_params()
