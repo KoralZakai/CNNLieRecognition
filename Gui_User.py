@@ -1,7 +1,7 @@
 from matplotlib.figure import Figure
 from PyQt5.QtGui import QPixmap, QIcon
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtWidgets import QWidget
 from PyQt5 import QtGui, QtWidgets
 import time
 import wave

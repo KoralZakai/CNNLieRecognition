@@ -229,7 +229,7 @@ class CNNCreator:
         """
         earlyStop = keras.callbacks.EarlyStopping(monitor='val_loss',
                                                   min_delta=.01,
-                                                  patience=5,
+                                                  patience=10,
                                                   verbose=1,
                                                   mode='auto',
                                                   baseline=None,
