@@ -16,6 +16,5 @@ class Help_Window(QWidget):
         helpUser.setWindowTitle("Help")
         helpUser.setWindowIcon(QIcon(':Pictures/logo.png'))
         helpUser.setIconPixmap(pixmap2)
-
         helpUser.show()
         helpUser.exec()
