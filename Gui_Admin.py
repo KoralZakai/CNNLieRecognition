@@ -289,11 +289,16 @@ class Gui_Admin(QWidget):
                     if i == 1:
                         j += 1
 
-                batch_size = int(self.arrTxt[Feature.BATCH_SIZE].toPlainText())
-                learning_rate = float(self.arrTxt[Feature.LEARN_RATE].toPlainText())
-                epoch_nbr = int(self.arrTxt[Feature.EPOCH_NBR].toPlainText())
-                feature_nbr = int(self.arrTxt[Feature.FEATURE_NBR].toPlainText())
                 exceptionMsg = ""
+
+                try:
+                    batch_size = int(self.arrTxt[Feature.BATCH_SIZE].toPlainText())
+                    learning_rate = float(self.arrTxt[Feature.LEARN_RATE].toPlainText())
+                    epoch_nbr = int(self.arrTxt[Feature.EPOCH_NBR].toPlainText())
+                    feature_nbr = int(self.arrTxt[Feature.FEATURE_NBR].toPlainText())
+                except Exception as e:
+                    exceptionMsg = exceptionMsg + "Please enter only numbers.\n"
+
                 if batch_size <= 0:
                     exceptionMsg = exceptionMsg + "Batch size must be positive number.\n"
                 if learning_rate >= 1 or learning_rate <= 0:
@@ -330,7 +335,7 @@ class Gui_Admin(QWidget):
                 self.changeDisable(False)
 
         except Exception as e:
-            QMessageBox.information(self, "Warning", e)
+            QMessageBox.information(self, "Warning", exceptionMsg)
 
     def changeDisable(self,status):
         """

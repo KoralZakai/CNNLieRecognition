@@ -332,6 +332,7 @@ class Gui_User(QWidget):
             self.stopRecordBtn.setVisible(True)
             self.secondsub_Frame.setVisible(True)
             self.fileBrowserBtn.setDisabled(True)
+
             self.frames = []
             self.recThread = threading.Thread(target = self.inputData)
             self.recThread.start()
