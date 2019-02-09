@@ -3,7 +3,7 @@
 from keras.callbacks import Callback
 
 
-class Graph:
+class GraphIndex:
     """
         Enum to readable indexes of the graph array
     """
@@ -35,10 +35,10 @@ class AccuracyHistory(Callback):
         """
         self.index_log_on_batch = [0]
         self.index_on_batch = 0
-        self.logs[Graph.ACC_BATCH] = [self.logs[Graph.ACC_BATCH][-1]]
-        self.logs[Graph.LOSS_BATCH] = [self.logs[Graph.LOSS_BATCH][-1]]
-        self.graph_arr[Graph.ACC_BATCH].clear()
-        self.graph_arr[Graph.LOSS_BATCH].clear()
+        self.logs[GraphIndex.ACC_BATCH] = [self.logs[GraphIndex.ACC_BATCH][-1]]
+        self.logs[GraphIndex.LOSS_BATCH] = [self.logs[GraphIndex.LOSS_BATCH][-1]]
+        self.graph_arr[GraphIndex.ACC_BATCH].clear()
+        self.graph_arr[GraphIndex.LOSS_BATCH].clear()
         self.log_print[str].emit("Epoch number {} of {}".format(epoch, self.epoch))
 
     def on_epoch_end(self, batch, logs={}):
@@ -47,10 +47,10 @@ class AccuracyHistory(Callback):
         """
         self.index_on_epoch +=1
         self.index_log_on_epoch.append(self.index_on_epoch)
-        self.logs[Graph.ACC_EPOCH].append(logs.get('acc'))
-        self.logs[Graph.LOSS_EPOCH].append(logs.get('loss'))
-        self.draw.emit(self.graph_arr[Graph.ACC_EPOCH], self.logs[Graph.ACC_EPOCH],self.index_log_on_epoch)
-        self.draw.emit(self.graph_arr[Graph.LOSS_EPOCH], self.logs[Graph.LOSS_EPOCH],self.index_log_on_epoch)
+        self.logs[GraphIndex.ACC_EPOCH].append(logs.get('acc'))
+        self.logs[GraphIndex.LOSS_EPOCH].append(logs.get('loss'))
+        self.draw.emit(self.graph_arr[GraphIndex.ACC_EPOCH], self.logs[GraphIndex.ACC_EPOCH], self.index_log_on_epoch)
+        self.draw.emit(self.graph_arr[GraphIndex.LOSS_EPOCH], self.logs[GraphIndex.LOSS_EPOCH], self.index_log_on_epoch)
         self.log_print[str].emit("Epoch training result: acc: {0:.4f} loss:{1:.4f}".format(logs.get('acc'), logs.get('loss')))
         self.log_print[str].emit("Epoch validation result: acc: {0:.4f} loss:{1:.4f}\n\n".format(logs.get('val_acc'), logs.get('val_loss')))
 
@@ -61,10 +61,10 @@ class AccuracyHistory(Callback):
         self.index_on_batch += 1
         self.index_log_on_batch.append(self.index_on_batch)
         # calculate new accumulative average
-        avg_acc = ((self.index_on_batch-1)*self.logs[Graph.ACC_BATCH][-1]+logs.get('acc'))/self.index_on_batch
-        avg_loss =((self.index_on_batch-1)*self.logs[Graph.LOSS_BATCH][-1]+logs.get('loss'))/self.index_on_batch
-        self.logs[Graph.ACC_BATCH].append(avg_acc)
-        self.logs[Graph.LOSS_BATCH].append(avg_loss)
-        self.draw.emit(self.graph_arr[Graph.ACC_BATCH], self.logs[Graph.ACC_BATCH], self.index_log_on_batch)
-        self.draw.emit(self.graph_arr[Graph.LOSS_BATCH], self.logs[Graph.LOSS_BATCH], self.index_log_on_batch)
+        avg_acc = ((self.index_on_batch-1) * self.logs[GraphIndex.ACC_BATCH][-1] + logs.get('acc')) / self.index_on_batch
+        avg_loss = ((self.index_on_batch-1) * self.logs[GraphIndex.LOSS_BATCH][-1] + logs.get('loss')) / self.index_on_batch
+        self.logs[GraphIndex.ACC_BATCH].append(avg_acc)
+        self.logs[GraphIndex.LOSS_BATCH].append(avg_loss)
+        self.draw.emit(self.graph_arr[GraphIndex.ACC_BATCH], self.logs[GraphIndex.ACC_BATCH], self.index_log_on_batch)
+        self.draw.emit(self.graph_arr[GraphIndex.LOSS_BATCH], self.logs[GraphIndex.LOSS_BATCH], self.index_log_on_batch)
         self.log_print[str].emit("acc: {0:.4f} loss:{1:.4f}".format(avg_acc, avg_loss))

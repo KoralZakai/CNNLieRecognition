@@ -1,19 +1,15 @@
 import ctypes
-import os
-from functools import reduce
-from tkinter import *
 from datetime import datetime
-from PyQt5.QtGui import QIcon, QColor, QTextCursor, QPixmap
-from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox, QDialog, QSizePolicy
+from PyQt5.QtGui import QIcon, QPixmap
+from PyQt5.QtWidgets import QApplication, QWidget, QMessageBox
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import Qt, QFile, QTextStream
 from PyQt5 import QtCore
-from ModelTrainingUtils.CNN import CNN as CNN
+from ModelTrainingUtils.CNNCreator import CNNCreator as CNNCreator
 import pyqtgraph as pg
 import multiprocessing as mp
-from ModelTrainingUtils.AccuracyHistory import AccuracyHistory, Graph
+from ModelTrainingUtils.AccuracyHistory import AccuracyHistory, GraphIndex
 from ModelTrainingUtils.CNNThreadWork import CNNThreadWork
-import numpy as np
 from Help_Window import Help_Window
 
 
@@ -308,14 +304,14 @@ class Gui_Admin(QWidget):
                 self.btnStartLearnPhase.setText("Cancel")
                 self.init_graph_by_params()
                 displayGraph = AccuracyHistory(self.graph_arr,self.graph_frame,self.logText, self.draw_plot,epoch_nbr)
-                self.CNN_model = CNN(output=self.logText,
-                                     calback_func =displayGraph,
-                                     batch_size=batch_size,
-                                     train_perc=self.train_percent,
-                                     epoch_nbr=epoch_nbr,
-                                     column_nbr=feature_nbr,
-                                     optimizer=self.comboText,
-                                     learn_rate=learning_rate)
+                self.CNN_model = CNNCreator(output=self.logText,
+                                            calback_func =displayGraph,
+                                            batch_size=batch_size,
+                                            train_perc=self.train_percent,
+                                            epoch_nbr=epoch_nbr,
+                                            column_nbr=feature_nbr,
+                                            optimizer=self.comboText,
+                                            learn_rate=learning_rate)
                 self.CNNThread = CNNThreadWork(self,self.CNN_model)
                 self.CNNThread.daemon = True
                 self.CNNThread.start()
@@ -349,14 +345,14 @@ class Gui_Admin(QWidget):
         """
         init graph labels
         """
-        self.graph_arr[Graph.ACC_EPOCH].setLabel('bottom', 'Epoch number', units='times')
-        self.graph_arr[Graph.ACC_EPOCH].setLabel('left', 'Accuracy', units='%')
-        self.graph_arr[Graph.LOSS_EPOCH].setLabel('left', 'Loss value', units='%')
-        self.graph_arr[Graph.LOSS_EPOCH].setLabel('bottom', 'Epoch number', units='times')
-        self.graph_arr[Graph.ACC_BATCH].setLabel('bottom', 'Batch number', units='times')
-        self.graph_arr[Graph.ACC_BATCH].setLabel('left', 'Accuracy', units='%')
-        self.graph_arr[Graph.LOSS_BATCH].setLabel('left', 'Loss value', units='%')
-        self.graph_arr[Graph.LOSS_BATCH].setLabel('bottom', 'Batch number', units='times')
+        self.graph_arr[GraphIndex.ACC_EPOCH].setLabel('bottom', 'Epoch number', units='times')
+        self.graph_arr[GraphIndex.ACC_EPOCH].setLabel('left', 'Accuracy', units='%')
+        self.graph_arr[GraphIndex.LOSS_EPOCH].setLabel('left', 'Loss value', units='%')
+        self.graph_arr[GraphIndex.LOSS_EPOCH].setLabel('bottom', 'Epoch number', units='times')
+        self.graph_arr[GraphIndex.ACC_BATCH].setLabel('bottom', 'Batch number', units='times')
+        self.graph_arr[GraphIndex.ACC_BATCH].setLabel('left', 'Accuracy', units='%')
+        self.graph_arr[GraphIndex.LOSS_BATCH].setLabel('left', 'Loss value', units='%')
+        self.graph_arr[GraphIndex.LOSS_BATCH].setLabel('bottom', 'Batch number', units='times')
 
     def on_show_message_box(self, res):
         """

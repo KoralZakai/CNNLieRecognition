@@ -10,7 +10,7 @@ import pyaudio
 from PyQt5.QtWidgets import QFileDialog, QMessageBox
 from PyQt5.QtCore import Qt, QFile, QTextStream
 import pyqtgraph
-from ModelTrainingUtils.CNN import *
+from ModelTrainingUtils.CNNCreator import *
 import ctypes
 from Help_Window import Help_Window
 import sys
@@ -264,7 +264,7 @@ class Gui_User(QWidget):
     def onActivatedComboBoxCoef(self, text):
         """
         Getting the Coefficients number once the user click on the Coefficients combobox
-        :param text: The text that the user clicked on in the combobox
+        :param text: The text that the user clicked on in the comobox
 
         """
         self.NUMCEP = int(text)
@@ -411,7 +411,7 @@ class Gui_User(QWidget):
         # Drawing mfcc for the input file.
         self.showMfcc()
         # Prediction using the picked model .
-        newCNN = CNN(model=self.pickedModelPath)
+        newCNN = CNNCreator(modelName=self.pickedModelPath)
         if newCNN.column_nbr != self.NUMCEP:
             QMessageBox.about(self, "Error", "The Coefficients number is not match the model Properties ,dont worry, I will fix it for you ")
             self.comboBoxCoef.setCurrentIndex(newCNN.column_nbr-32)

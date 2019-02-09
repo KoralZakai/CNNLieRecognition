@@ -2,7 +2,7 @@ from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import Qt, QFile, QTextStream
-from ModelTrainingUtils.CNN import *
+from ModelTrainingUtils.CNNCreator import *
 import ctypes
 from Gui_Admin import Gui_Admin
 from Gui_User import Gui_User

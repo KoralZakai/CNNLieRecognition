@@ -7,14 +7,14 @@ import scipy.io.wavfile as wav
 from sklearn.metrics import classification_report, confusion_matrix
 import matplotlib.pyplot as plt
 
-PATH = "db\\English\\wav"
-from ModelTrainingUtils.CNN import CNN
+PATH = "db\\wav"
+from ModelTrainingUtils.CNNCreator import CNNCreator
 def confusion():
-    for modelFile in ["4.h5"]:  # os.listdir("Model"):
+    for modelFile in ["BestOne.h5"]:  # os.listdir("Model"):
         print(modelFile)
-        filenames = os.listdir("{}\\wav".format(PATH))
+        filenames = os.listdir("{}\\".format(PATH))
         # create store folder if it not exists
-        model = CNN(model="Model/{}".format(modelFile))
+        model = CNNCreator(modelName="Model/{}".format(modelFile))
         model.set_running_status(True)
         true_pos = false_neg = true_neg = false_pos = 0
         data = np.zeros((len(filenames), 3, 225, 32), dtype=float)
@@ -65,12 +65,12 @@ def changeFile():
     Lie = 0
     NotLie = 0
     for file in os.listdir(PATH):
-        if file[7] == "6":
-            Lie +=1
+        if file[5] == "A":
+            Lie += 1
             os.rename("{}\\{}".format(PATH,file), "{}\\Lie_{}.wav".format(PATH, Lie))
         else:
             NotLie += 1
             os.rename("{}\\{}".format(PATH, file), "{}\\NotLie_{}.wav".format(PATH, NotLie))
 
-changeFile()
-#confusion()
+#changeFile()
+confusion()
