@@ -10,34 +10,20 @@ import matplotlib.pyplot as plt
 PATH = "db\\wav"
 from ModelTrainingUtils.CNNCreator import CNNCreator
 def confusion():
-    for modelFile in ["BestOne.h5"]:  # os.listdir("Model"):
+    for modelFile in ["10_0001_30_32_multiple.h5"]:#:os.listdir("Model"):
         print(modelFile)
         filenames = os.listdir("{}\\".format(PATH))
         # create store folder if it not exists
         model = CNNCreator(modelName="Model/{}".format(modelFile))
         model.set_running_status(True)
         true_pos = false_neg = true_neg = false_pos = 0
-        data = np.zeros((len(filenames), 3, 225, 32), dtype=float)
-        label = np.zeros((len(filenames), 1), dtype=int)
         model.createDataSet()
-        '''
-        predictions = model.model.predict(data)
-        val = np.argmax(predictions, axis=1)
-        for i in label:
-            if 
-        if label[i] == "True" and val == 1:
-            true_pos += 1
-        elif label[i] == "False" and val != 1:
-            false_neg +=1
-        elif label[i] == "True" and val != 1:
-            true_neg +=1
-        else:
-            false_pos+=1
-        #print("True positive:{} True negative:{}\n False positive{} False negative{}".format(true_pos, true_neg,
-                                                                                                false_pos, false_neg))
-        '''
         #
         data = model.data.reshape(model.data.shape[0], 225, 32, 3)
+        max = np.max(data)
+        min = np.min(data)
+        data = (data - min) / (max - min)
+        data = (data * 255)
         predictions = model.model.predict(data, batch_size=1, verbose=0)
         label = model.label.ravel()
 

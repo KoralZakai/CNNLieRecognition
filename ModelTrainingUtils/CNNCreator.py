@@ -140,6 +140,9 @@ class CNNCreator:
         nextLayer = Dense(1000, kernel_regularizer=regularizers.l2(0.001))(nextLayer)
         nextLayer = Dropout(0.5)(nextLayer)
         nextLayer = Activation("relu")(nextLayer)
+        nextLayer = Dense(1000, kernel_regularizer=regularizers.l2(0.001))(nextLayer)
+        nextLayer = Dropout(0.5)(nextLayer)
+        nextLayer = Activation("relu")(nextLayer)
         lastLayer = Dense(2, activation="softmax")(nextLayer)
         self.model = Model(VGG16_conv2D.input, lastLayer)
         # compile the model
@@ -173,8 +176,11 @@ class CNNCreator:
         """
         # reshaping input
         input_model = np.zeros((1, 3, self.line_nbr, self.column_nbr), dtype=float)
-        input_model[0][0] = input_model[0][1] = input_model[0][2] = input[0:225, :]
-        input_model[0][0] = input_model[0][1] = input_model[0][2] = input[0:225, :]
+        input_model[0][0] = input[0:225, :]
+        max = np.max(input_model)
+        min = np.min(input_model)
+        input_model = (input_model - min) / (max - min)
+        input_model = (input_model * 255)
         input_model = input_model.reshape(input_model.shape[0], self.line_nbr, self.column_nbr, 3)
         res = self.model.predict(input_model, verbose=1)
 
