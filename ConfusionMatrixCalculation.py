@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 PATH = "db\\wav"
 from ModelTrainingUtils.CNNCreator import CNNCreator
 def confusion():
-    for modelFile in ["10_0001_30_32_multiple.h5"]:#:os.listdir("Model"):
+    for modelFile in ["TheBestOfTheBest.h5"]:#:os.listdir("Model"):
         print(modelFile)
         filenames = os.listdir("{}\\".format(PATH))
         # create store folder if it not exists
@@ -51,7 +51,8 @@ def changeFile():
     Lie = 0
     NotLie = 0
     for file in os.listdir(PATH):
-        if file[5] == "A":
+        #if file[5] == "A":
+        if file[7] == "6":
             Lie += 1
             os.rename("{}\\{}".format(PATH,file), "{}\\Lie_{}.wav".format(PATH, Lie))
         else:
