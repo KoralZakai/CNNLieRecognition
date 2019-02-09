@@ -14,6 +14,7 @@ from ModelTrainingUtils.CNNCreator import *
 import ctypes
 from Help_Window import Help_Window
 import sys
+import scipy.io.wavfile as wav
 class Gui_User(QWidget):
     def __init__(self, parent=None):
         super(Gui_User, self).__init__(parent)
