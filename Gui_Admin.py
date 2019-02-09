@@ -379,6 +379,7 @@ class Gui_Admin(QWidget):
         self.changeDisable(False)
         for i in range(4):
             self.graph_arr[i].clear()
+        self.graph_arr = []
 
 
     def file_save(self):

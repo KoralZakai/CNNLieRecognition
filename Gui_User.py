@@ -401,6 +401,7 @@ class Gui_User(QWidget):
         """
         # Showing te graph's frame.
         self.settings_Frame.setVisible(True)
+        self.secondsub_Frame.setVisible(False)
         # Drawing the sound graph / mfcc graph.
         self.showSoundWav()
         self.showMfcc()
@@ -419,7 +420,21 @@ class Gui_User(QWidget):
             self.NUMCEP=int(self.comboBoxCoef.currentText())
             self.showMfcc()
         cnnResult = newCNN.predict(self.mfccResult)
-        QMessageBox.information(self, "Results", "Result : "+str(cnnResult[0]))
+        if cnnResult[1] <=0.5:
+            QMessageBox.information(self, "Results", "Result : Telling The Truth ")
+        else:
+            #QMessageBox.information(self, "Results", "Result : Lying "+str(float("{0:.4f}".format(cnnResult[1]))*100)+"%")
+            QMessageBox.information(self, "Results",
+                                    "Result : Lying " + str(float("{0:.4f}".format(cnnResult[1]))) + "%")
+
+        """check = os.path.dirname(os.path.realpath(sys.argv[0])) + "\\db\\wav"
+        for modelname in os.listdir(check):
+            (rate, sig) = wav.read(check+"\\"+modelname)
+            mfccres = mfcc(sig, rate,winstep=0.005,numcep=self.NUMCEP,nfilt=self.NUMCEP,nfft=1200)
+            cnnResult = newCNN.predict(mfccres)
+            print(modelname +" - result - "+"["+str(cnnResult[0])+"]"+"  "+"["+str(cnnResult[1])+"]")"""
+
+
 
 
     def clearGraph(self):
