@@ -44,7 +44,6 @@ class Main_Window(QWidget):
         #the first sub window
         self.main_layout = QtWidgets.QVBoxLayout(self.main_frame)
         self.firstsub_Frame = QtWidgets.QFrame(self.main_frame)
-        #self.firstsub_Frame.setObjectName("FormFrame")
         self.firstsub_Frame.setFixedWidth(self.width)
         self.firstsub_Frame.setFixedHeight(400)
         self.main_layout.addWidget(self.firstsub_Frame)
@@ -64,7 +63,6 @@ class Main_Window(QWidget):
         self.secondsub_Layout = QtWidgets.QHBoxLayout(self.secondsub_Frame)
         self.secondsub_Frame.setFixedWidth(self.width)
         self.secondsub_Layout.setAlignment(Qt.AlignTop|Qt.AlignCenter)
-        #self.secondsub_Frame.setObjectName("FormFrame")
 
         #Setting up the fields
 
@@ -77,15 +75,11 @@ class Main_Window(QWidget):
         # Admin button
         adminBtn = QtWidgets.QPushButton("Admin Console", self)
         adminBtn.setObjectName("MainGuiButtons")
-        #adminBtn.setFixedWidth(300)
-       # adminBtn.setFixedHeight(300)
         adminBtn.clicked.connect(self.openAdminGui)
 
         # User button
         userBtn = QtWidgets.QPushButton("User Console", self)
         userBtn.setObjectName("MainGuiButtons")
-        #userBtn.setFixedWidth(300)
-        #userBtn.setFixedHeight(300)
         userBtn.clicked.connect(self.openUserGui)
 
         self.secondsub_Layout.addWidget(adminBtn)
