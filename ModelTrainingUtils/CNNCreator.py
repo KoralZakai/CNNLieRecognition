@@ -183,7 +183,6 @@ class CNNCreator:
         input_model = (input_model * 255)
         input_model = input_model.reshape(input_model.shape[0], self.line_nbr, self.column_nbr, 3)
         res = self.model.predict(input_model, verbose=1)
-
         return float(res[0][0]), float(res[0][1])
 
     def trainModel(self):
