@@ -33,6 +33,9 @@ class CNNThreadWork(Thread):
         if not self.is_run:
             return
         self.CNN_model.createDataSet()
+        # if dataset is empty stop the thread
+        if not self.CNN_model.isRun or not self.is_run:
+            return
         self.logger.logText[str].emit("loading csv file to variables...")
         if not self.is_run:
             return

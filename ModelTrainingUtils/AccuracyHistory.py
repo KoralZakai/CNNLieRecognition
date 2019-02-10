@@ -39,7 +39,7 @@ class AccuracyHistory(Callback):
         self.logs[GraphIndex.LOSS_BATCH] = [self.logs[GraphIndex.LOSS_BATCH][-1]]
         self.graph_arr[GraphIndex.ACC_BATCH].clear()
         self.graph_arr[GraphIndex.LOSS_BATCH].clear()
-        self.log_print[str].emit("Epoch number {} of {}".format(epoch, self.epoch))
+        self.log_print[str].emit("Epoch number {} of {}".format(epoch+1, self.epoch))
 
     def on_epoch_end(self, batch, logs={}):
         """

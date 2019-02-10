@@ -92,6 +92,10 @@ class CNNCreator:
         """
         winstep = 0.005
         filenames = os.listdir("{}\\wav".format(self.DB_PATH))
+        if len(filenames) == 0:
+            self.output[str].emit("Please insert wav files in folder db/wav")
+            self.isRun = False
+            return
         # create store folder if it not exists
         if not os.path.exists("{}\\MFCC".format(self.DB_PATH)):
             os.makedirs("{}\\MFCC".format(self.DB_PATH))
