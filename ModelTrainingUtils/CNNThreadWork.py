@@ -1,4 +1,5 @@
 import threading
+import time
 from threading import Thread
 
 from PyQt5 import QtCore
@@ -28,13 +29,13 @@ class CNNThreadWork(Thread):
         self.is_run = True
         self.CNN_model.set_running_status(self.is_run)
         self.logger.logText[str].emit("creating dataset...")
+        time.sleep(2)
         if not self.is_run:
             return
         self.CNN_model.createDataSet()
         self.logger.logText[str].emit("loading csv file to variables...")
         if not self.is_run:
             return
-        #self.CNN_model.load_data()
         # print to log with disable start button because train model is an atomic function
         # and there is no way to stop it except destroy the thread
         self.logger.logText[str, bool].emit("starting to train model...", True)
@@ -42,6 +43,8 @@ class CNNThreadWork(Thread):
             return
         self.CNN_model.trainModel()
         self.logger.logText[str].emit("Finished training model")
+        self.logger.logText[str].emit("Confusion matrix:")
+        self.CNN_model.buildConfusionMatrix()
         if not self.is_run:
             return
         self.logger.showMessageBox[str].emit('Finished')

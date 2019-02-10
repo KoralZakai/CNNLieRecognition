@@ -197,7 +197,7 @@ class CNNCreator:
         self.label = keras.utils.to_categorical(self.label, 2)
         self.data = self.data.reshape(self.data.shape[0], self.line_nbr, self.column_nbr, 3)
 
-        X_train, X_test, y_train, y_test = train_test_split(self.data, self.label, test_size=1-self.train_percent)
+        X_train, self.X_test, y_train, self.y_test = train_test_split(self.data, self.label, test_size=1-self.train_percent)
         if self.isRun:
             #starting to train model
             with self.default_graph.as_default():
@@ -205,7 +205,7 @@ class CNNCreator:
                                          y_train,
                                          batch_size=self.batch_size,
                                          epochs=self.epoch_nbr,
-                                         validation_data=(X_test, y_test),
+                                         validation_data=(self.X_test, self.y_test),
                                          shuffle=True,
                                          verbose=1,
                                          callbacks=self.getCallBacks())
@@ -246,7 +246,40 @@ class CNNCreator:
                                                   update_freq='epoch')
         return [tensorBoard, earlyStop, self.AccuracyCallback]
 
+    def buildConfusionMatrix(self):
+        """
+        building confusion matrix to analyze the model
+        :return:
+        """
+        with self.default_graph.as_default():
+            predictions = self.model.predict(self.X_test, batch_size=1, verbose=0)
+        label = self.y_test[:,0].ravel()
+        predictions = np.argmax(predictions, axis=1)
+        true_pos = true_neg = false_neg = false_pos = 0
+        for i in range(len(label)):
+            if label[i] == 0 and predictions[i] < .5:
+                false_neg += 1
+            elif label[i] == 0 and predictions[i] >= .5:
+                true_pos += 1
+            elif label[i] == 1 and predictions[i] >= .5:
+                false_pos += 1
+            else:
+                true_neg += 1
+        self.output[str].emit("True positive:{}  False negative{} ".format(true_pos, false_neg))
+        self.output[str].emit("False positive{}  True negative:{}".format(false_pos, true_neg))
+        recall = true_pos/(true_pos+false_neg)
+        if true_pos+false_pos == 0:
+            precision = 0
+        else:
+            precision = true_pos/(true_pos+false_pos)
+        self.output[str].emit("recall={}".format(recall))
+        self.output[str].emit("precision={}".format(precision))
+
     def clearMFCCFolder(self):
+        """
+        clear the folder with MFCC result
+        :return:
+        """
         for the_file in os.listdir("db\\MFCC"):
             file_path = os.path.join("db\\MFCC", the_file)
             try:

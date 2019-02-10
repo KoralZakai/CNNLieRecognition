@@ -51,13 +51,13 @@ def changeFile():
     Lie = 0
     NotLie = 0
     for file in os.listdir(PATH):
-        #if file[5] == "A":
-        if file[7] == "6":
+        if file[5] == "A":
+        #if file[7] == "6":
             Lie += 1
             os.rename("{}\\{}".format(PATH,file), "{}\\Lie_{}.wav".format(PATH, Lie))
         else:
             NotLie += 1
             os.rename("{}\\{}".format(PATH, file), "{}\\NotLie_{}.wav".format(PATH, NotLie))
 
-#changeFile()
-confusion()
+changeFile()
+#confusion()
